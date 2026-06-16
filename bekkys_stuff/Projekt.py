@@ -48,7 +48,7 @@ def create_ct_volume(cur_ct_files: list[str]) -> np.ndarray[tuple[int, ...], np.
     sorting CT slices
 
     :param cur_ct_files:
-    :return: volume.shape
+    :return: volume
     """
     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
 
@@ -73,14 +73,13 @@ def apply_hu(cur_volume, cur_ct_files: list[str]):
     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
 
 
-
-if __name__ == '__main__':
-    data_path = "./data/Projekt/09-18-2008-StudyID-NA-69331/0.000000-NA-82046"
-    ct_files, rt_struct, rt_dose = get_modality(data_path)
-    print(ct_files)
-    print(rt_struct)
-    print(rt_dose)
-
-    this_volume = create_ct_volume(ct_files)
-    print(this_volume.shape)
+# if __name__ == '__main__':
+#     data_path = "./data/Projekt/09-18-2008-StudyID-NA-69331/0.000000-NA-82046"
+#     ct_files, rt_struct, rt_dose = get_modality(data_path)
+#     print(ct_files)
+#     print(rt_struct)
+#     print(rt_dose)
+#
+#     this_volume = create_ct_volume(ct_files)
+#     print(this_volume.shape)
 
