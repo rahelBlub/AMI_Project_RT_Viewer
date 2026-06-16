@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 import math
 import pydicom
+from pydicom import FileDataset
 import skimage as ski
 from skimage import morphology, measure
 
@@ -43,7 +44,7 @@ def get_modality(cur_data_path: str) -> tuple[list[str], str | None, str | None]
     return cur_ct_files, rtstruct, rtdose
 
 
-def create_ct_volume(cur_ct_files: list[str]) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+def create_ct_volume(cur_ct_files: list[str] | list[FileDataset]) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
     """
     sorting CT slices
 

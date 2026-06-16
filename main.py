@@ -5,7 +5,8 @@ import pydicom
 import os
 
 #TODO: wenn wir das als src nutzen -> Rename
-# import bekkys_stuff.Projekt
+import bekkys_stuff.Projekt
+from bekkys_stuff.Projekt import create_ct_volume
 
 # TODO: Dateien in Projekt einfügen?
 folder = "./RT/LUNG1-001/09-18-2008-StudyID-NA-69331/0.000000-NA-82046/"
@@ -20,6 +21,8 @@ files = [
 
 # Nach Slice-Position sortieren
 # TODO: ähnlich bekkys_stuff.Projekt.create_ct_volume()
+fun_volume = create_ct_volume(files)  # Beispielaufruf
+
 files.sort(key=lambda x: float(x.ImagePositionPatient[2]))
 
 volume = np.stack([f.pixel_array for f in files])
@@ -52,6 +55,11 @@ plt.subplots_adjust(bottom=0.25)
 # -----------------------------
 # Initiale Bilder
 # -----------------------------
+
+#TODO: aus cmap und interpolation Parametern statische Var?
+# INTERPOLATION = "nearest"
+# CMAP = "grey"
+# für den Aufruf: volume[z_idx, :, :], cmap=CMAP, interpolation=INTERPOLATION, aspect=dy / dx
 
 img_axial = ax_axial.imshow(
     volume[z_idx, :, :], cmap="gray", interpolation="nearest", aspect=dy / dx
