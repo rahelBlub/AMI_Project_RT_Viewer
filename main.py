@@ -4,6 +4,9 @@ from matplotlib.widgets import Slider
 import pydicom
 import os
 
+#TODO: wenn wir das als src nutzen -> Rename
+# import bekkys_stuff.Projekt
+
 # TODO: Dateien in Projekt einfügen?
 folder = "./RT/LUNG1-001/09-18-2008-StudyID-NA-69331/0.000000-NA-82046/"
 
