@@ -15,3 +15,10 @@ DICOM Radiotherapy Datensätze mit
 ### Herausforderungen:
 - Radiotherapy Daten analysieren und auswerten
 - Strukturen in orthogonalen MPRs anzeigen
+
+
+## Shell Commands:
+
+````shell
+pip install -r .\requirements.txt
+````
