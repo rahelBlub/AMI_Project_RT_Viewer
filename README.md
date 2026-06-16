@@ -22,3 +22,11 @@ DICOM Radiotherapy Datensätze mit
 ````shell
 pip install -r .\requirements.txt
 ````
+
+````shell
+# create virtual enviroment /.venv :
+python3 -m venv .venv
+
+#activate virtual enviroment:
+source .venv/bin/activate
+````
