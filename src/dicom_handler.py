@@ -82,8 +82,8 @@ class DicomHandler:
 
     def get_rtdose(self, data: FileDataset) -> float:
         if data.Modality == "RTDOSE":
-            dose = data.RTDOSE
-            return dose
+            return data.RTDOSE
+        return 0.0
 
     def get_metadata(self) -> dict[str, ...]:
         image = self._dicom_list[0]
@@ -97,4 +97,25 @@ class DicomHandler:
             "PatientPosition": image.PatientPosition,
         }
 
+    @staticmethod
+    def inspect_dataset(root):
+        for path, _, files in os.walk(root):
+
+            for f in files:
+                try:
+                    ds = pydicom.dcmread(
+                        os.path.join(path, f),
+                        stop_before_pixels=True
+                    )
+
+                    print(
+                        f"{ds.Modality:10}",
+                        ds.get("SeriesDescription", "---"),
+                        path
+                    )
+
+                    break
+
+                except Exception:
+                    pass
 
