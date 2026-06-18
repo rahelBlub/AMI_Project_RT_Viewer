@@ -1,4 +1,6 @@
 import os
+from pprint import pprint
+
 import numpy as np
 import pydicom
 from pydicom import FileDataset
@@ -77,3 +79,17 @@ class DicomHandler:
         :return: Modality str of data
         """
         return data.Modality
+
+    def get_metadata(self) -> dict[str, ...]:
+        image = self._dicom_list[0]
+
+        return {
+            "PatientName": image.PatientName,
+            "PatientAge": image.PatientAge,
+            "PatientSex": image.PatientSex,
+            "BodyPartExamined": image.BodyPartExamined,
+            "SliceThickness": image.SliceThickness,
+            "PatientPosition": image.PatientPosition,
+        }
+
+

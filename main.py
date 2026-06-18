@@ -11,6 +11,7 @@ if __name__ == "__main__":
     data_path = "./data/RT/LUNG1-001/09-18-2008-StudyID-NA-69331/0.000000-NA-82046"
 
     d_handler = DicomHandler(data_path)
+    #print(d_handler.get_metadata())
 
     #volume = d_handler.create_ct_volume() # mit windowing nur noch mit HU Werten!
     volume = d_handler.create_ct_volume_with_HU()
