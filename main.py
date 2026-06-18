@@ -13,7 +13,7 @@ if __name__ == "__main__":
     d_handler = DicomHandler(data_path)
 
     #volume = d_handler.create_ct_volume()
-    volume = d_handler.convert_to_HU()
+    volume = d_handler.create_ct_volume_with_HU()
     voxelspacing = d_handler.get_voxelspacing()
 
     viewer = CTViewer(volume, voxelspacing)
