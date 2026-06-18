@@ -9,7 +9,7 @@ import bekkys_stuff.Projekt
 from bekkys_stuff.Projekt import create_ct_volume
 
 # TODO: Dateien in Projekt einfügen?
-folder = "./RT/LUNG1-001/09-18-2008-StudyID-NA-69331/0.000000-NA-82046/"
+folder = "./data/RT/LungData_01"
 
 # TODO: in Funktionen/Classe/Methoden aufdröseln: - Single Responsibility :D
 # in bekkys_stuff/Projekt.py ca so angefangen
