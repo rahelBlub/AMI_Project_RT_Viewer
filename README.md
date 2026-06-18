@@ -18,6 +18,8 @@
 - [x] Anzeige als orthogonale MPR 
 - [x] HU-Einstellfenster
 - [ ] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
+  - [x] Funktion die Parameter als dict zurückgibt
+  - [ ] Einbindung an Frontend
 - [ ] An-/Ausschalten der Strukturen (aus RT-Structure-Set)
 - [ ] Dosisanzeige als transparente Colourwash 
   - [ ] Isolinien
