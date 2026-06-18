@@ -3,12 +3,29 @@
 ---
 ## Inhaltsverzeichnis
 - [Aufgabenstellung](#aufgabenstellung)
+  - [Todo Liste](#todo-liste)
+  - [Folie](#folie)
 - [Planung](#planung)
   - [Initial](#initial)
 - [Shell Commands](#shell-commands)
 
 ---
 ## Aufgabenstellung
+
+### Todo Liste
+
+- [x] Anzeige als orthogonale MPR 
+- [ ] HU-Einstellfenster
+- [ ] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
+- [ ] An-/Ausschalten der Strukturen (aus RT-Structure-Set)
+- [ ] Dosisanzeige als transparente Colourwash 
+  - [ ] Isolinien
+  - [ ] Legende
+- [ ] Anzeige der Dosis Min/Max/Mean einer Schicht
+- [ ] aktuelle Dosis Maus über Bild
+
+### Folie
+
 <table>
 <tr>
 <th style="text-align:left;"> 
@@ -33,6 +50,7 @@ Herausforderungen:
 <th> <img src="data/images/ziel_gui.png" width="400"> </th>
 </tr>
 </table>
+
 
 ---
 ## Planung
