@@ -11,6 +11,9 @@ class CTViewer:
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
 
+        self.window_center = 40
+        self.window_width = 400
+
         self.z_idx = volume.shape[0] // 2
         self.y_idx = volume.shape[1] // 2
         self.x_idx = volume.shape[2] // 2
@@ -32,7 +35,11 @@ class CTViewer:
 
     def _create_images(self):
         self.img_axial = self.ax_axial.imshow(
-            self.volume[self.z_idx, :, :],
+            self.apply_window(
+                self.volume[self.z_idx, :, :],
+                self.window_center,
+                self.window_width,
+            ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=self.dy / self.dx,
@@ -40,7 +47,10 @@ class CTViewer:
         self.ax_axial.set_title("Axial")
 
         self.img_sagittal = self.ax_sagittal.imshow(
-            self.volume[:, :, self.x_idx],
+            self.apply_window(self.volume[:, :, self.x_idx],
+                              self.window_center,
+                              self.window_width,
+                              ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=self.dz / self.dy,
@@ -48,7 +58,7 @@ class CTViewer:
         self.ax_sagittal.set_title("Sagittal")
 
         self.img_coronal = self.ax_coronal.imshow(
-            self.volume[:, self.y_idx, :],
+            self.apply_window(self.volume[:, self.y_idx, :], self.window_center, self.window_width),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=self.dz / self.dx,
@@ -56,6 +66,8 @@ class CTViewer:
         self.ax_coronal.set_title("Coronal")
 
     def _create_sliders(self):
+
+        #TODO: FRONTEND - Die Slider überlagern die Bilder
         ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
         self.slider_z = Slider(
             ax_slider_z,
@@ -86,23 +98,52 @@ class CTViewer:
             valstep=1,
         )
 
+        ax_wc = plt.axes((0.15, 0.20, 0.65, 0.03))
+        self.slider_wc = Slider(
+            ax_wc,
+            "Center",
+            -1000,
+            1000,
+            valinit=self.window_center,
+        )
+
+        ax_ww = plt.axes((0.15, 0.25, 0.65, 0.03))
+        self.slider_ww = Slider(
+            ax_ww,
+            "Width",
+            1,
+            3000,
+            valinit=self.window_width,
+        )
+
         self.slider_z.on_changed(self._update)
         self.slider_y.on_changed(self._update)
         self.slider_x.on_changed(self._update)
+        self.slider_wc.on_changed(self._update)
+        self.slider_ww.on_changed(self._update)
 
     def _update(self, val):
         z = int(self.slider_z.val)
         y = int(self.slider_y.val)
         x = int(self.slider_x.val)
+        self.window_center = self.slider_wc.val
+        self.window_width = self.slider_ww.val
 
-        self.img_axial.set_data(self.volume[z, :, :])
-        self.img_sagittal.set_data(self.volume[:, :, x])
-        self.img_coronal.set_data(self.volume[:, y, :])
+        self.img_axial.set_data(self.apply_window(self.volume[z, :, :], self.window_center, self.window_width))
+        self.img_sagittal.set_data(self.apply_window(self.volume[:, :, x], self.window_center, self.window_width))
+        self.img_coronal.set_data(self.apply_window(self.volume[:, y, :], self.window_center, self.window_width))
 
         self.fig.canvas.draw_idle()
 
     def show(self):
         plt.show()
+
+    @staticmethod
+    def apply_window(image, center, width):
+        lower = center - width / 2
+        upper = center + width / 2
+
+        return image.clip(lower, upper)
 
     def change_cmap(self, new_cmap="grey"):
         """

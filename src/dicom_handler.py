@@ -75,13 +75,3 @@ class DicomHandler:
         :return: Modality str of data
         """
         return data.Modality
-
-    # TODO:
-    # def apply_hu(cur_volume, cur_ct_files: list[str]):
-    #     """
-    #
-    #     :param cur_volume:
-    #     :param cur_ct_files:
-    #     :return:
-    #     """
-    #     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
