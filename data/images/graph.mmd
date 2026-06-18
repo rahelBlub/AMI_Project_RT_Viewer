@@ -1,0 +1,21 @@
+---
+config:
+  theme: 'default'
+---
+
+classDiagram
+
+    class BilderHandler{
+        - dcm_list: list[str]
+        + calc_volume(dcm_list)
+        + calc_voxel_spacing()
+        + update()
+    }
+
+    BilderHandler --> main
+
+    class main{
+        + daten_plotten
+        + klasse_aufrufen
+    }
+

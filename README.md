@@ -1,9 +1,13 @@
 # Projekt2: RT-Viewer
 
+---
 ## Inhaltsverzeichnis
 - [Aufgabenstellung](#aufgabenstellung)
+- [Planung](#planung)
+  - [Initial](#initial)
 - [Shell Commands](#shell-commands)
 
+---
 ## Aufgabenstellung
 <table>
 <tr>
@@ -30,6 +34,33 @@ Herausforderungen:
 </tr>
 </table>
 
+---
+## Planung
+
+### Initial
+
+Erste Idee wie der Code strukturiert sein soll:
+````mermaid
+---
+config:
+  theme: 'default'
+---
+classDiagram
+    class BilderHandler{
+        - dcm_list: list[str]
+        + calc_volume(dcm_list)
+        + calc_voxel_spacing()
+        + update()
+    }
+    BilderHandler --> main
+    class main{
+        + daten_plotten
+        + klasse_aufrufen
+    }
+
+````
+
+---
 ## Shell Commands:
 
 ````shell
