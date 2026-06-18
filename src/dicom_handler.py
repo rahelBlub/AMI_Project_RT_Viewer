@@ -40,11 +40,13 @@ def get_modality(cur_data_path: str) -> tuple[list[str], str | None, str | None]
         elif modality == "RTDOSE":
             rtdose = path
 
-        #print(file, modality)
+        # print(file, modality)
     return cur_ct_files, rtstruct, rtdose
 
 
-def create_ct_volume(cur_ct_files: list[str] | list[FileDataset]) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+def create_ct_volume(
+    cur_ct_files: list[str] | list[FileDataset],
+) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
     """
     sorting CT slices
 
@@ -53,13 +55,9 @@ def create_ct_volume(cur_ct_files: list[str] | list[FileDataset]) -> np.ndarray[
     """
     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
 
-    datasets.sort(
-        key=lambda ds: float(ds.ImagePositionPatient[2])
-    )
+    datasets.sort(key=lambda ds: float(ds.ImagePositionPatient[2]))
 
-    volume = np.stack(
-        [ds.pixel_array for ds in datasets]
-    )
+    volume = np.stack([ds.pixel_array for ds in datasets])
 
     return volume
 
@@ -74,7 +72,7 @@ def apply_hu(cur_volume, cur_ct_files: list[str]):
     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     data_path = "../data/RT/LungData_01"
     ct_files, rt_struct, rt_dose = get_modality(data_path)
     print(ct_files)
@@ -83,4 +81,3 @@ if __name__ == '__main__':
 
     this_volume = create_ct_volume(ct_files)
     print(this_volume.shape)
-

@@ -4,15 +4,15 @@ from matplotlib.widgets import Slider
 import pydicom
 import os
 
-#TODO: wenn wir das als src nutzen -> Rename
-import bekkys_stuff.Projekt
-from bekkys_stuff.Projekt import create_ct_volume
+# TODO: wenn wir das als src nutzen -> Rename
+import src.dicom_handler
+from src.dicom_handler import create_ct_volume
 
 # TODO: Dateien in Projekt einfügen?
 folder = "./data/RT/LungData_01"
 
 # TODO: in Funktionen/Classe/Methoden aufdröseln: - Single Responsibility :D
-# in bekkys_stuff/Projekt.py ca so angefangen
+# in src/dicom_handler.py ca so angefangen
 files = [
     pydicom.dcmread(os.path.join(folder, f))
     for f in os.listdir(folder)
@@ -20,7 +20,7 @@ files = [
 ]
 
 # Nach Slice-Position sortieren
-# TODO: ähnlich bekkys_stuff.Projekt.create_ct_volume()
+# TODO: ähnlich src.Projekt.create_ct_volume()
 fun_volume = create_ct_volume(files)  # Beispielaufruf
 
 files.sort(key=lambda x: float(x.ImagePositionPatient[2]))
@@ -56,7 +56,7 @@ plt.subplots_adjust(bottom=0.25)
 # Initiale Bilder
 # -----------------------------
 
-#TODO: aus cmap und interpolation Parametern statische Var?
+# TODO: aus cmap und interpolation Parametern statische Var?
 # INTERPOLATION = "nearest"
 # CMAP = "grey"
 # für den Aufruf: volume[z_idx, :, :], cmap=CMAP, interpolation=INTERPOLATION, aspect=dy / dx
@@ -120,5 +120,5 @@ plt.show()
 
 # TODO: main nutzen
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
