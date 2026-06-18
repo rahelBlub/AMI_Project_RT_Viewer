@@ -75,9 +75,43 @@ classDiagram
         + daten_plotten
         + klasse_aufrufen
     }
-
 ````
 
+### Erste Implementierungen
+````mermaid
+---
+config:
+  theme: 'default'
+---
+classDiagram
+    class DicomHandler{
+        - _dicom_list: list[FileDataset]
+        + dcm_data_dir: str
+        - _get_dcm_files()
+        - _sort_dicom_list()
+        + create_ct_volume()
+        + get_voxelspacing()
+        + get_modality()
+    }
+    class CTViewer{
+        + volume: shape
+        + dx: float
+        + dy: float
+        + dz: float
+        + x_idx: int
+        + y_idx: int
+        + z_idx: int
+        - _create_figure()
+        - _create_images()
+        - _create_sliders()
+        - _update()
+        + show()
+        + change_cmap()
+        + change_interpolation()
+    }
+    DicomHandler --> main
+    CTViewer --> main
+````
 ---
 ## Shell Commands:
 

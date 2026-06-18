@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+from numpy import ndarray, dtype
 
 
 class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
 
-    def __init__(self, volume, voxelspacing):
+    def __init__(self, volume: ndarray[tuple[int, ...], dtype[...]], voxelspacing: tuple[float, float, float]):
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
 
