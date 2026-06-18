@@ -47,3 +47,25 @@ class DicomIndexer:
     def save(self, filename="dicom_index.json"):
         with open(filename, "w") as f:
             json.dump(self.index, f, indent=2)
+
+    @staticmethod
+    def inspect_dataset(root):
+        for path, _, files in os.walk(root):
+
+            for f in files:
+                try:
+                    ds = pydicom.dcmread(
+                        os.path.join(path, f),
+                        stop_before_pixels=True
+                    )
+
+                    print(
+                        f"{ds.Modality:10}",
+                        ds.get("SeriesDescription", "---"),
+                        path
+                    )
+
+                    break
+
+                except Exception:
+                    pass
