@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.widgets import Slider
-
+import matplotlib.image as mpimg
 
 class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
+    PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
     def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], dose_volume=None, dose_alpha=0.4):
+        self.overview_img = mpimg.imread("./data/images/patient_planes.png")
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
 
@@ -30,11 +32,10 @@ class CTViewer:
 
         self.ax_axial = self.axs[0, 0]
         self.ax_sagittal = self.axs[0, 1]
-        self.ax_coronal = self.axs[1, 0]
+        self.ax_coronal = self.axs[1, 1]
+        self.ax_overview = self.axs[1, 0]
 
-        self.axs[1, 1].axis("off")
-
-        plt.subplots_adjust(bottom=0.25)
+        #plt.subplots_adjust(bottom=0.25)
 
     def _create_images(self):
         self.img_axial = self.ax_axial.imshow(
@@ -67,6 +68,9 @@ class CTViewer:
             aspect=self.dz / self.dx,
         )
         self.ax_coronal.set_title("Coronal")
+
+        self.img_overview = self.ax_overview.imshow(self.overview_img)
+        self.ax_overview.set_title("Overview")
 
     def _create_sliders(self):
 

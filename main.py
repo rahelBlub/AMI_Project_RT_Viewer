@@ -14,11 +14,17 @@ if __name__ == "__main__":
     index = indexer.build()
     indexer.save()
 
+    patients = list(index.keys())
+    print(patients)
 
-    study_uid = list(index["LUNG1-001"].keys())[0]
-    ct_path = index["LUNG1-001"][study_uid]["ct"]
+    study_uid = list(index[patients[3]].keys())[0]
+    ct_path = index[patients[3]][study_uid]["ct"]
+
+    #p7_uid = list(index[patients[6]].keys())[0]
+    #mr_path = index[patients[6]][p7_uid]["mr"]
 
     d_handler = DicomHandler(ct_path)
+    #d_handler = DicomHandler(mr_path)
     #print(d_handler.get_metadata())
 
     #volume = d_handler.create_ct_volume() # mit windowing nur noch mit HU Werten!
