@@ -11,55 +11,57 @@ import skimage as ski
 from skimage import morphology, measure
 
 
-def get_modality(cur_data_path: str) -> tuple[list[str], str | None, str | None]:
-    """
-    Dateien klassifizieren
+class DicomHandler:
+    def __init__(self, dicom_dir: str):
+        self._dicom_list, self.rt_struct, self.rt_dose = self.get_modality(dicom_dir)
 
-    :param cur_data_path:
-    :return: paths to ct_files, rtstruct, rtdose as tuple
-    """
-    cur_ct_files = []
-    rtstruct = None
-    rtdose = None
+    def get_modality(
+        self, cur_data_path: str
+    ) -> tuple[list[str], str | None, str | None]:
+        """
+        Dateien klassifizieren
 
-    data_list = os.listdir(cur_data_path)
+        :param cur_data_path:
+        :return: paths to ct_files, rtstruct, rtdose as tuple
+        """
+        cur_ct_files = []
+        rtstruct = None
+        rtdose = None
 
-    for file in data_list:
-        path = os.path.join(cur_data_path, file)
+        data_list = os.listdir(cur_data_path)
 
-        ds = pydicom.dcmread(path)
+        for file in data_list:
+            path = os.path.join(cur_data_path, file)
 
-        modality = ds.Modality
+            ds = pydicom.dcmread(path)
 
-        if modality == "CT":
-            cur_ct_files.append(path)
+            modality = ds.Modality
 
-        elif modality == "RTSTRUCT":
-            rtstruct = path
+            if modality == "CT":
+                cur_ct_files.append(path)
 
-        elif modality == "RTDOSE":
-            rtdose = path
+            elif modality == "RTSTRUCT":
+                rtstruct = path
 
-        # print(file, modality)
-    return cur_ct_files, rtstruct, rtdose
+            elif modality == "RTDOSE":
+                rtdose = path
 
+            # print(file, modality)
+        return cur_ct_files, rtstruct, rtdose
 
-def create_ct_volume(
-    cur_ct_files: list[str] | list[FileDataset],
-) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
-    """
-    sorting CT slices
+    def create_ct_volume(self) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+        """
+        sorting CT slices
 
-    :param cur_ct_files:
-    :return: volume
-    """
-    datasets = [pydicom.dcmread(f) for f in cur_ct_files]
+        :return: volume
+        """
+        datasets = [pydicom.dcmread(f) for f in self._dicom_list]
 
-    datasets.sort(key=lambda ds: float(ds.ImagePositionPatient[2]))
+        datasets.sort(key=lambda ds: float(ds.ImagePositionPatient[2]))
 
-    volume = np.stack([ds.pixel_array for ds in datasets])
+        volume = np.stack([ds.pixel_array for ds in datasets])
 
-    return volume
+        return volume
 
 
 def apply_hu(cur_volume, cur_ct_files: list[str]):
@@ -74,10 +76,7 @@ def apply_hu(cur_volume, cur_ct_files: list[str]):
 
 if __name__ == "__main__":
     data_path = "../data/RT/LungData_01"
-    ct_files, rt_struct, rt_dose = get_modality(data_path)
-    print(ct_files)
-    print(rt_struct)
-    print(rt_dose)
+    d_handler = DicomHandler(dicom_dir=data_path)
 
-    this_volume = create_ct_volume(ct_files)
+    this_volume = d_handler.create_ct_volume()
     print(this_volume.shape)
