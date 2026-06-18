@@ -45,7 +45,9 @@ class DicomHandler:
 
         return images
 
-    def _convert_to_HU(self, item: FileDataset, image: np.ndarray) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+    def _convert_to_HU(
+        self, item: FileDataset, image: np.ndarray
+    ) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
         """
         Convert the pixel values to Hounsfield Units (HU)
         https://github.com/shujuecn/Radiverse/blob/main/src/radiverse/windowing.py#L23

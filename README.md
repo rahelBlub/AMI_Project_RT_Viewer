@@ -16,7 +16,7 @@
 ### Todo Liste
 
 - [x] Anzeige als orthogonale MPR 
-- [ ] HU-Einstellfenster
+- [x] HU-Einstellfenster
 - [ ] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
 - [ ] An-/Ausschalten der Strukturen (aus RT-Structure-Set)
 - [ ] Dosisanzeige als transparente Colourwash 

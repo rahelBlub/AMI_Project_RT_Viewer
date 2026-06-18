@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.widgets import Slider
 from numpy import ndarray, dtype
 
@@ -7,7 +8,11 @@ class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
 
-    def __init__(self, volume: ndarray[tuple[int, ...], dtype[...]], voxelspacing: tuple[float, float, float]):
+    def __init__(
+        self,
+        volume: ndarray[tuple[int, ...], dtype[...]],
+        voxelspacing: tuple[float, float, float],
+    ):
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
 
@@ -47,10 +52,11 @@ class CTViewer:
         self.ax_axial.set_title("Axial")
 
         self.img_sagittal = self.ax_sagittal.imshow(
-            self.apply_window(self.volume[:, :, self.x_idx],
-                              self.window_center,
-                              self.window_width,
-                              ),
+            self.apply_window(
+                self.volume[:, :, self.x_idx],
+                self.window_center,
+                self.window_width,
+            ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=self.dz / self.dy,
@@ -58,7 +64,9 @@ class CTViewer:
         self.ax_sagittal.set_title("Sagittal")
 
         self.img_coronal = self.ax_coronal.imshow(
-            self.apply_window(self.volume[:, self.y_idx, :], self.window_center, self.window_width),
+            self.apply_window(
+                self.volume[:, self.y_idx, :], self.window_center, self.window_width
+            ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=self.dz / self.dx,
@@ -66,8 +74,7 @@ class CTViewer:
         self.ax_coronal.set_title("Coronal")
 
     def _create_sliders(self):
-
-        #TODO: FRONTEND - Die Slider überlagern die Bilder
+        # TODO: FRONTEND - Die Slider überlagern die Bilder
         ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
         self.slider_z = Slider(
             ax_slider_z,
@@ -122,16 +129,28 @@ class CTViewer:
         self.slider_wc.on_changed(self._update)
         self.slider_ww.on_changed(self._update)
 
-    def _update(self, val):
+    def _update(self, val: int | float):
         z = int(self.slider_z.val)
         y = int(self.slider_y.val)
         x = int(self.slider_x.val)
         self.window_center = self.slider_wc.val
         self.window_width = self.slider_ww.val
 
-        self.img_axial.set_data(self.apply_window(self.volume[z, :, :], self.window_center, self.window_width))
-        self.img_sagittal.set_data(self.apply_window(self.volume[:, :, x], self.window_center, self.window_width))
-        self.img_coronal.set_data(self.apply_window(self.volume[:, y, :], self.window_center, self.window_width))
+        self.img_axial.set_data(
+            self.apply_window(
+                self.volume[z, :, :], self.window_center, self.window_width
+            )
+        )
+        self.img_sagittal.set_data(
+            self.apply_window(
+                self.volume[:, :, x], self.window_center, self.window_width
+            )
+        )
+        self.img_coronal.set_data(
+            self.apply_window(
+                self.volume[:, y, :], self.window_center, self.window_width
+            )
+        )
 
         self.fig.canvas.draw_idle()
 
@@ -139,7 +158,9 @@ class CTViewer:
         plt.show()
 
     @staticmethod
-    def apply_window(image, center, width):
+    def apply_window(
+        image: np.ndarray, center: float, width: float
+    ) -> ndarray[tuple[int, ...], dtype[...]]:
         lower = center - width / 2
         upper = center + width / 2
 
