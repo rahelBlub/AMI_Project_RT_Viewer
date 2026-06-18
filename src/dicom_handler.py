@@ -80,6 +80,11 @@ class DicomHandler:
         """
         return data.Modality
 
+    def get_rtdose(self, data: FileDataset) -> float:
+        if data.Modality == "RTDOSE":
+            dose = data.RTDOSE
+            return dose
+
     def get_metadata(self) -> dict[str, ...]:
         image = self._dicom_list[0]
 
