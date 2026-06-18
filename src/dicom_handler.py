@@ -32,6 +32,33 @@ class DicomHandler:
 
         return volume
 
+    def create_ct_volume_with_HU(self) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+        """
+        sorting CT slices and getting volume of data
+        """
+        self._sort_dicom_list()
+        images = np.stack([ds.pixel_array for ds in self._dicom_list]).astype(np.int16)
+        images[images == -2048] = 0
+
+        for i, item in enumerate(self._dicom_list):
+            images[i] = self._convert_to_HU(item, images[i])
+
+        return images
+
+    def _convert_to_HU(self, item: FileDataset, image: np.ndarray) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+        """
+        Convert the pixel values to Hounsfield Units (HU)
+        https://github.com/shujuecn/Radiverse/blob/main/src/radiverse/windowing.py#L23
+        """
+        intercept = item.RescaleIntercept
+        slope = item.RescaleSlope
+
+        if slope != 1:
+            image = slope * image.astype(np.float64)
+        image += np.int16(intercept)
+
+        return image
+
     def get_voxelspacing(self) -> tuple[float, float, float]:
         self._sort_dicom_list()
         dy, dx = map(float, self._dicom_list[0].PixelSpacing)
@@ -49,7 +76,7 @@ class DicomHandler:
         """
         return data.Modality
 
-    #TODO:
+    # TODO:
     # def apply_hu(cur_volume, cur_ct_files: list[str]):
     #     """
     #
