@@ -26,7 +26,7 @@ Herausforderungen:
 
 - Radiotherapy Daten analysieren und auswerten
 - Strukturen in orthogonalen MPRs anzeigen</th>
-<th> <img src="./images/ziel_gui.png" width="400"> </th>
+<th> <img src="data/images/ziel_gui.png" width="400"> </th>
 </tr>
 </table>
 
