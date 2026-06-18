@@ -1,6 +1,10 @@
 from src.ct_viewer import CTViewer
 from src.dicom_handler import DicomHandler
 
+#TODO: am Ende evtl anpassen, sodass man
+# das Programm via shell aufrufen kann mit
+# $python3 main.py --p ./data/RT/LungData_01
+
 if __name__ == "__main__":
     data_path = "./data/RT/LungData_01"
 

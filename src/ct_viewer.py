@@ -85,11 +85,11 @@ class CTViewer:
             valstep=1,
         )
 
-        self.slider_z.on_changed(self.update)
-        self.slider_y.on_changed(self.update)
-        self.slider_x.on_changed(self.update)
+        self.slider_z.on_changed(self._update)
+        self.slider_y.on_changed(self._update)
+        self.slider_x.on_changed(self._update)
 
-    def update(self, val):
+    def _update(self, val):
         z = int(self.slider_z.val)
         y = int(self.slider_y.val)
         x = int(self.slider_x.val)

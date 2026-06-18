@@ -26,8 +26,6 @@ class DicomHandler:
     def create_ct_volume(self) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
         """
         sorting CT slices and getting volume of data
-
-        :return: volume
         """
         self._sort_dicom_list()
         volume = np.stack([ds.pixel_array for ds in self._dicom_list])
@@ -51,12 +49,12 @@ class DicomHandler:
         """
         return data.Modality
 
-
-# def apply_hu(cur_volume, cur_ct_files: list[str]):
-#     """
-#
-#     :param cur_volume:
-#     :param cur_ct_files:
-#     :return:
-#     """
-#     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
+    #TODO:
+    # def apply_hu(cur_volume, cur_ct_files: list[str]):
+    #     """
+    #
+    #     :param cur_volume:
+    #     :param cur_ct_files:
+    #     :return:
+    #     """
+    #     datasets = [pydicom.dcmread(f) for f in cur_ct_files]
