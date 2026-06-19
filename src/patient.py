@@ -76,6 +76,9 @@ class Patient:
         self._seg_path = in_path
 
     # GETTER----------------------------------------------------
+    def get_patient_name(self) -> str | None:
+        return self._patient_name
+
     def get_patient_age(self) -> int | None:
         return self._patient_age
 
