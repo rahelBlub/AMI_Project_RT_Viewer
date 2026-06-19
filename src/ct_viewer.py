@@ -6,7 +6,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
-from patient import Patient
+from src.patient import Patient
 from src.helper.dict_to_list import dict_to_list
 from src.helper.ui_theme import *
 from src.dicom_handler import DicomHandler
@@ -23,10 +23,8 @@ class CTViewer:
 
         self.pat = patient
         d_handler = DicomHandler(patient)
-        self.metadata: dict[str, str] = d_handler.get_metadata()
         self.volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-
         self.dose_volume = patient.get_rt_dose_path()
 
         self.window_center = 40
@@ -52,21 +50,12 @@ class CTViewer:
         #     ax.set_xticks([])
         #     ax.set_yticks([])
 
-        # metadata_list = dict_to_list(self.metadata)
-        # # aus dem Alter '0' am Anfang und Buchstaben generell entfernen:
-        # metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
-
-        self.fig.canvas.manager.set_window_title(self.pat.get_patient_name() + " " + metadata_list[1] + " " + metadata_list[2])
+        self.fig.canvas.manager.set_window_title(f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}")
 
         self.fig.text(
             0.02,
             0.925,
-            "Body Part: "
-            + metadata_list[3]
-            + "\nSlice Thickness: "
-            + metadata_list[4]
-            + "\nPatient Position: "
-            + metadata_list[5],
+            f"Body Part: {self.pat.get_body_part_examined()} \nSlice Thickness: {self.pat.get_slice_thickness()} \nPatient Position: {self.pat.get_patient_position()}",
             fontsize=12,
             color='w'
         )

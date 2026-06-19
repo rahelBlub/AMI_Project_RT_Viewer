@@ -10,38 +10,18 @@ from src.patient_handler import PatientHandler
 # $python3 main.py --p ./data/RT/LungData_01
 
 if __name__ == "__main__":
-    # indexer.inspect_dataset("./data/RT") # to find out where the needed datafiles lie
     indexer = DicomIndexer("./data/RT")
     index = indexer.build()
     indexer.save()
 
     pat_list = indexer.get_patient_list()
 
-    pat_handler = PatientHandler(pat_list[0], indexer.get_json_file_dir())
+    pat_handler = PatientHandler(pat_list[1], indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()
 
-    d_handler = DicomHandler(cur_pat)
-    print("hier")
-    # patients = list(index.keys())
-    # print(patients)
-    #
-    # # Bekky: hab idx = 0 weil der existiert immer
-    study_uid = list(index[pat_list[1]].keys())[0]
-    #ct_path = index[pat_list[1]][study_uid]["ct"]
-    #
-    # #p7_uid = list(index[patients[6]].keys())[0]
-    # #mr_path = index[patients[6]][p7_uid]["mr"]
-    #
-    d_handler = DicomHandler(cur_pat)
-    # #d_handler = DicomHandler(mr_path)
-    # #print(d_handler.get_metadata())
-    #
-    # volume = d_handler.create_ct_volume() # mit windowing nur noch mit HU Werten!
-    volume = d_handler.create_ct_volume_with_HU()
-    voxelspacing = d_handler.get_voxelspacing()
-    metadata = d_handler.get_metadata()
-
-    #
-    viewer = CTViewer(volume, voxelspacing, metadata)
+    # viewer handerl
+    viewer = CTViewer(cur_pat)
     viewer.show()
+
+    # mr_viewer = MRViewer()
 
