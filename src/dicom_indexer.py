@@ -12,11 +12,13 @@ class DicomIndexer:
         #TODO: schauen ob Verzeichnis schon existiert,
         # damit es nicht mehrfach komplett laufen muss
         # mit hashing abfragen ob sich was geändert hat
+        self._patient_list: list[str] = []
 
         self.root = root
         self.index = defaultdict(lambda: defaultdict(dict))
         self.has_rt_dose = False
         self.has_rt_structure = False
+        self._json_file_name = "dicom_index.json"
 
     def build(self):
         for path, _, files in os.walk(self.root):
@@ -30,6 +32,9 @@ class DicomIndexer:
                     continue
 
                 patient = ds.get("PatientID", "UNKNOWN")
+                if self._patient_list.count(patient) == 0:
+                    self._patient_list.append(patient)
+
                 study = ds.get("StudyInstanceUID", "NO_STUDY")
                 modality = ds.get("Modality", "UNKNOWN")
                 study_desc = ds.get("StudyDescription", study)
@@ -50,9 +55,18 @@ class DicomIndexer:
 
         return self.index
 
-    def save(self, filename="dicom_index.json"):
-        with open(filename, "w") as f:
+    def save(self):
+        with open(self._json_file_name, "w") as f:
             json.dump(self.index, f, indent=2)
+
+    def get_json_file_dir(self):
+        """
+        returns full json-file directory path
+        """
+        return os.curdir.join(self._json_file_name)
+
+    def get_patient_list(self) -> list[str]:
+        return self._patient_list
 
     @staticmethod
     def inspect_dataset(root):
