@@ -91,19 +91,19 @@ class Patient:
     def get_patient_position(self) -> str | None:
         return self._patient_position
 
-    def get_ct_data_available(self) -> bool:
+    def has_ct_data_available(self) -> bool:
         return self._has_ct_studies
 
-    def get_mr_data_available(self) -> bool:
+    def has_mr_data_available(self) -> bool:
         return self._has_mr_studies
 
-    def get_rt_struct_available(self) -> bool:
+    def has_rt_struct_available(self) -> bool:
         return self._has_rt_struct
 
-    def get_rt_dose_available(self) -> bool:
+    def has_rt_dose_available(self) -> bool:
         return self._has_rt_dose
 
-    def get_seg_available(self) -> bool:
+    def has_seg_available(self) -> bool:
         return self._has_seg
 
     def get_ct_path(self) -> str | None:

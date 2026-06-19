@@ -5,6 +5,8 @@ import numpy as np
 import pydicom
 from pydicom import FileDataset
 
+from src.patient import Patient
+
 
 class DicomHandler:
     def __init__(self, dicom_dir: str):
@@ -97,4 +99,12 @@ class DicomHandler:
             "PatientPosition": image.PatientPosition,
         }
 
+    def get_metadata_to_patient(self, pat: Patient):
+        image = self._dicom_list[0]
+
+        pat.set_patient_age(image.PatientAge)
+        pat.set_patient_sex(image.PatientSex)
+        pat.set_body_part_examined(image.BodyPartExamined)
+        pat.set_slice_thickness(image.SliceThickness)
+        pat.set_patient_position(image.PatientPosition)
 
