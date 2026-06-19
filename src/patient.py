@@ -13,6 +13,8 @@ class Patient:
         self._slice_thickness: str | None = None
         self._patient_position: str | None = None
 
+        self._image_position_patient: str | None = None
+
         self._has_ct_studies: bool = False
         self._has_mr_studies: bool = False
         self._has_rt_struct: bool = False
@@ -79,6 +81,8 @@ class Patient:
     def set_seg_path(self, in_path) -> None:
         self._seg_path = in_path
 
+    def set_image_position_patient(self, in_var):
+        self._image_position_patient = in_var
     # GETTER----------------------------------------------------
     def get_patient_name(self) -> str | None:
         return self._patient_name
@@ -127,3 +131,6 @@ class Patient:
 
     def get_seg_path(self) -> str | None:
         return self._seg_path
+
+    def get_image_position_patient(self):
+        return self._image_position_patient

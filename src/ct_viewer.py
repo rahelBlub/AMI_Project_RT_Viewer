@@ -20,14 +20,30 @@ class CTViewer:
         d_handler = DicomHandler(patient)
         self.volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-        #self.dose_volume = d_handler.get_rtdose()
+        # self.dose_volume = d_handler.get_rtdose()
 
         # TODO: Resampling-kacke nochmal genauer anschauen checke es gerade nicht
+        # Bekky: ich hab das gefunden https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
         # resampling RT Dose
-        ct_img = self.get_ct_image()
+        ct_img = self.get_ct_image(d_handler.get_patient_image_position_patient())
         dose_img = d_handler.get_dose_image()
-        self.dose_resampled =  sitk.Resample(dose_img,ct_img,sitk.Transform(),sitk.sitkLinear,0.0,sitk.sitkFloat32)
-        #self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
+
+        print("CT")
+        print("Size:", ct_img.GetSize())
+        print("Spacing:", ct_img.GetSpacing())
+        print("Origin:", ct_img.GetOrigin())
+        print("Direction:", ct_img.GetDirection())
+
+        print()
+
+        print("DOSE")
+        print("Size:", dose_img.GetSize())
+        print("Spacing:", dose_img.GetSpacing())
+        print("Origin:", dose_img.GetOrigin())
+        print("Direction:", dose_img.GetDirection())
+
+        self.dose_resampled = sitk.Resample(dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32)
+        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
         self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
 
         self.window_center = 40
@@ -42,13 +58,14 @@ class CTViewer:
         self._create_sliders()
 
     def _create_figure(self):
-        #self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
-        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT),constrained_layout=True)
-        gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1]) # seperate space for global slider
+        # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
+        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT), constrained_layout=True)
+        gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1])  # seperate space for global slider
         gs_top = gs[0].subgridspec(2, 2)
         gs_bottom = gs[1].subgridspec(2, 1)
 
-        self.fig.canvas.manager.set_window_title(f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}")
+        self.fig.canvas.manager.set_window_title(
+            f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}")
 
         self.fig.text(
             0.02,
@@ -134,14 +151,24 @@ class CTViewer:
     # Bekky: hab ein paar Ergänzungen zur Typsicherheit im Setter gemacht, musst ggf auf
     # None abfragen, falls die Daten nicht vorhanden sind
 
-    def get_ct_image(self):
+    def get_ct_image(self, image_position_patient):
         img = sitk.GetImageFromArray(self.volume.astype(np.float32))
-        #origin = self.pat.get_patient_position()
+        # origin = self.pat.get_patient_position()
         spacing = (self.dx, self.dy, self.dz)
 
-        img.SetSpacing((spacing))
-        #img.SetOrigin((origin))
-        img.SetDirection((1,0,0, 0,1,0, 0,0,1))
+        # Übernahme origin aus image position pat von erstem ct
+        if image_position_patient is not None:
+            origin = tuple(float(v) for v in image_position_patient)
+        else:
+            # kp ob das sinnvoll ist aber was besseres fällt mir auch nicht ein
+            origin = (0, 0, 0)
+
+        img.SetSpacing(spacing)
+        # img.SetOrigin((origin))
+        img.SetOrigin(origin)
+        img.SetDirection((1, 0, 0,
+                          0, 1, 0,
+                          0, 0, 1))
         return img
 
     # TODO: Resampling in Handler auslagern evtl.

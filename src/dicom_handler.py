@@ -129,10 +129,18 @@ class DicomHandler:
         if image.__contains__("PatientAge"):
             self._pat.set_patient_age(image.PatientAge)
         if image.__contains__("PatientSex"):
-            self._pat.set_patient_sex("PatientSex")
+            self._pat.set_patient_sex(image.PatientSex)
         if image.__contains__("BodyPartExamined"):
-            self._pat.set_body_part_examined("BodyPartExamined")
+            self._pat.set_body_part_examined(image.BodyPartExamined)
         if image.__contains__("SliceThickness"):
-            self._pat.set_slice_thickness("SliceThickness")
+            self._pat.set_slice_thickness(image.SliceThickness)
         if image.__contains__("PatientPosition"):
-            self._pat.set_patient_position("PatientPosition")
+            self._pat.set_patient_position(image.PatientPosition)
+
+        if image.__contains__("ImagePositionPatient"):
+            self._pat.set_image_position_patient(image.ImagePositionPatient)
+
+    def get_patient_image_position_patient(self):
+        if self._pat.get_image_position_patient() is not None:
+            return self._pat.get_image_position_patient()
+        return None
