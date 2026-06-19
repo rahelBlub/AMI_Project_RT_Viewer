@@ -35,6 +35,9 @@ class CTViewer:
         self.ax_coronal = self.axs[1, 1]
         self.ax_overview = self.axs[1, 0]
 
+        self.ax_axial.axis("off")
+        self.ax_sagittal.axis("off")
+        self.ax_coronal.axis("off")
         #plt.subplots_adjust(bottom=0.25)
 
     def _create_images(self):
