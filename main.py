@@ -7,6 +7,8 @@ from src.patient_handler import PatientHandler
 # das Programm via shell aufrufen kann mit
 # $python3 main.py --p ./data/RT/LungData_01
 
+#TODO: https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
+
 if __name__ == "__main__":
     indexer = DicomIndexer("./data/RT")
 
