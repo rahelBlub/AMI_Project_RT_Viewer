@@ -2,6 +2,7 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import axes
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
@@ -33,7 +34,7 @@ class CTViewer:
         self.x_idx = volume.shape[2] // 2
 
         self._create_figure()
-        #self._create_images()
+        # self._create_images()
         self._create_image_view()
         self._create_sliders()
 
@@ -78,7 +79,7 @@ class CTViewer:
         self.ax_coronal.axis("off")
         # plt.subplots_adjust(bottom=0.25)
 
-    # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
+    # eine Funktion, die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
     def _create_image_view(self):
         self.img_axial = self._create_image(
             self.ax_axial,
@@ -153,7 +154,7 @@ class CTViewer:
 
     def _create_sliders(self):
 
-        #TODO: FRONTEND - Die Slider überlagern die Bilder
+        # TODO: FRONTEND - Die Slider überlagern die Bilder
         ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
         self.slider_z = Slider(
             ax_slider_z,
