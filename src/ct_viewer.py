@@ -5,6 +5,7 @@ from matplotlib import axes
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
+import SimpleITK as sitk
 
 from src.patient import Patient
 from src.helper.dict_to_list import dict_to_list
@@ -25,7 +26,15 @@ class CTViewer:
         d_handler = DicomHandler(patient)
         self.volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-        self.dose_volume = d_handler.get_rtdose() # patient.get_rt_dose_path() # TODO: Funktion get_dose_volume
+        #self.dose_volume = d_handler.get_rtdose()
+
+        # TODO: Resampling-kacke nochmal genauer anschauen checke es gerade nicht
+        # resampling RT Dose
+        ct_img = self.get_ct_image()
+        dose_img = d_handler.get_dose_image()
+        self.dose_resampled =  sitk.Resample(dose_img,ct_img,sitk.Transform(),sitk.sitkLinear,0.0,sitk.sitkFloat32)
+        #self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
+        self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
 
         self.window_center = 40
         self.window_width = 400
@@ -75,11 +84,6 @@ class CTViewer:
             ax.set_yticks([])
             ax.set_frame_on(False)
 
-        # self.ax_axial = self.axs[0, 0]
-        # self.ax_sagittal = self.axs[0, 1]
-        # self.ax_coronal = self.axs[1, 1]
-        # self.ax_overview = self.axs[1, 0]
-
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
@@ -97,52 +101,76 @@ class CTViewer:
 
         raise ValueError("Unknown view")
 
-    def create_image(self, axis, idx: int, title: str):
-        image, aspect = self._get_slice(title, idx)
+    def create_image(self, axis, idx: int, view: str):
+        # CT-Slice holen
+        ct_slice, aspect = self._get_slice(view, idx)
 
-        img = axis.imshow(
-            self.apply_window(image, self.window_center, self.window_width),
+        ct_slice = self.apply_window(
+            ct_slice,
+            self.window_center,
+            self.window_width,
+        )
+
+        # CT darstellen
+        ct_img = axis.imshow(
+            ct_slice,
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=aspect,
         )
 
-        axis.set_title(title)
+        # RTDOSE darüber legen
+        if self.dose_volume is not None:
+            dose_slice, _ = self._get_slice(view, idx)
 
+            dose_img = axis.imshow(
+                dose_slice,
+                cmap="jet",
+                alpha=0.35,
+                vmin=0,
+                vmax=np.max(self.dose_volume),
+                aspect=aspect,
+            )
+
+        axis.set_title(view)
+
+        return ct_img, dose_img
+
+    # TODO: die Patient ImagePositionPatient stimmt irgendwie nicht, Datentyp übeprüfen
+    def get_ct_image(self):
+        img = sitk.GetImageFromArray(self.volume.astype(np.float32))
+        #origin = self.pat.get_patient_position()
+        spacing = (self.dx, self.dy, self.dz)
+
+        img.SetSpacing((spacing))
+        #img.SetOrigin((origin))
+        img.SetDirection((1,0,0, 0,1,0, 0,0,1))
         return img
 
-    def render_dose(self, ax, dose):
-        # return ax.imshow(
-        #     dose,
-        #     cmap=DOSE_COLORMAP,
-        #     alpha=DOSE_ALPHA
-        # )
-        plt.imshow(dose[dose.shape[0] // 2], cmap="jet")
-        plt.colorbar(label="Dose [Gy]")
-        plt.show()
+    # TODO: Resampling in Handler auslagern evtl.
+    def resample_to_reference(self, moving, reference):
+        resampler = sitk.ResampleImageFilter()
 
-    def render_seg(self, ax, seg):
-        return ax.imshow(
-            seg,
-            cmap=SEG_COLORMAP,
-            alpha=SEG_ALPHA
-        )
+        resampler.SetReferenceImage(reference)
+        resampler.SetInterpolator(sitk.sitkLinear)
+        resampler.SetDefaultPixelValue(0)
+
+        return resampler.Execute(moving)
 
     def _create_image_view(self):
-        self.img_axial = self.create_image(
+        self.img_axial, self.dose_axial = self.create_image(
             self.ax_axial,
             self.z_idx,
             "Axial",
         )
-        self.render_dose(self.dose_volume)
 
-        self.img_coronal = self.create_image(
+        self.img_coronal, self.dose_coronal = self.create_image(
             self.ax_coronal,
             self.y_idx,
             "Coronal",
         )
 
-        self.img_sagittal = self.create_image(
+        self.img_sagittal, self.dose_sagittal = self.create_image(
             self.ax_sagittal,
             self.x_idx,
             "Sagittal",
@@ -150,6 +178,9 @@ class CTViewer:
 
         self.img_overview = self.ax_overview.imshow(self.overview_img)
         self.ax_overview.set_title("Overview")
+
+        print("CT:", self.volume.shape)
+        print("DOSE:", self.dose_volume.shape)
 
     # get image positions for slider orientation
     @staticmethod
@@ -226,6 +257,11 @@ class CTViewer:
         self.img_axial.set_data(self.apply_window(self.volume[z, :, :], self.window_center, self.window_width))
         self.img_sagittal.set_data(self.apply_window(self.volume[:, :, x], self.window_center, self.window_width))
         self.img_coronal.set_data(self.apply_window(self.volume[:, y, :], self.window_center, self.window_width))
+
+        if self.dose_volume is not None:
+            self.dose_axial.set_data(self.dose_volume[z, :, :])
+            self.dose_sagittal.set_data(self.dose_volume[:, :, x])
+            self.dose_coronal.set_data(self.dose_volume[:, y, :])
 
         self.fig.canvas.draw_idle()
 

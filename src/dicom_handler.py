@@ -4,6 +4,7 @@ from pprint import pprint
 import numpy as np
 import pydicom
 from pydicom import FileDataset
+import SimpleITK as sitk
 
 from src.patient import Patient
 
@@ -16,6 +17,8 @@ class DicomHandler:
         self._dicom_list = self._get_dcm_files()
 
         self.get_metadata_to_patient()
+
+        self.ds = pydicom.dcmread(self._pat.get_rt_dose_path())
 
     def _get_dcm_files(self) -> list[FileDataset]:
         """
@@ -86,15 +89,29 @@ class DicomHandler:
         """
         return data.Modality
 
-    def get_rtdose(self):
-        self.ds = pydicom.dcmread(self._pat.get_rt_dose_path())
+
+    def get_rt_dose_volume(self):
         dose = self.ds.pixel_array.astype(np.float32)
 
         scaling = float(self.ds.DoseGridScaling)
 
         return dose * scaling
 
+    # TODO: keine Ahnung was hier passiert, aber das image stimmt noch nicht mit dem CT-Datensatz überien
+    def get_dose_image(self):
+        dose = self.ds.pixel_array.astype(np.float32)
+        dose *= float(self.ds.DoseGridScaling)
 
+        dose_img = sitk.GetImageFromArray(dose)
+
+        px, py = map(float, self.ds.PixelSpacing)
+        spacing = (px, py, 1.0)
+
+        dose_img.SetOrigin(self.ds.ImagePositionPatient)
+        dose_img.SetSpacing(spacing)
+        dose_img.SetDirection((1, 0, 0, 0, 1, 0, 0, 0, 1))
+
+        return dose_img
 
     def get_metadata(self) -> dict[str, str]:
         image = self._dicom_list[0]
