@@ -11,12 +11,10 @@ from src.patient_handler import PatientHandler
 
 if __name__ == "__main__":
     indexer = DicomIndexer("./data/RT")
-    index = indexer.build()
-    indexer.save()
 
     pat_list = indexer.get_patient_list()
 
-    pat_handler = PatientHandler(pat_list[1], indexer.get_json_file_dir())
+    pat_handler = PatientHandler(pat_list[2], indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()
 
     # viewer handerl
