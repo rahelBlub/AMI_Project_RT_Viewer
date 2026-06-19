@@ -1,6 +1,5 @@
 import re
 
-import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import axes
@@ -78,7 +77,6 @@ class CTViewer:
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
-        # plt.subplots_adjust(bottom=0.25)
 
     # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
     def _create_image_view(self):
@@ -177,7 +175,7 @@ class CTViewer:
         ax_wc = plt.axes((0.15, 0.20, 0.65, 0.03))
         self.slider_wc = Slider(
             ax_wc,
-            "Center",
+            "Window Center (HU)",
             -1000,
             1000,
             valinit=self.window_center,
@@ -186,7 +184,7 @@ class CTViewer:
         ax_ww = plt.axes((0.15, 0.25, 0.65, 0.03))
         self.slider_ww = Slider(
             ax_ww,
-            "Width",
+            "Window Width (HU)",
             1,
             3000,
             valinit=self.window_width,
