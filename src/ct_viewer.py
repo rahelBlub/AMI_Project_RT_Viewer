@@ -118,7 +118,6 @@ class CTViewer:
         raise ValueError("Unknown view")
 
     def create_image(self, axis, idx: int, view: str):
-        # CT-Slice holen
         ct_slice, aspect = self._get_slice(view, idx)
 
         ct_slice = self.apply_window(
@@ -127,7 +126,6 @@ class CTViewer:
             self.window_width,
         )
 
-        # CT darstellen
         ct_img = axis.imshow(
             ct_slice,
             cmap=self.CMAP,
@@ -135,7 +133,6 @@ class CTViewer:
             aspect=aspect,
         )
 
-        # RTDOSE darüber legen
         if self.dose_volume is not None:
             dose_slice, _ = self._get_slice(view, idx)
 

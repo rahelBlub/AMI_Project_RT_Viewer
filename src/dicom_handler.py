@@ -16,7 +16,6 @@ class DicomHandler:
 
         self.get_metadata_to_patient()
 
-        self.ds = pydicom.dcmread(self._pat.get_rt_dose_path())
 
     def _get_dcm_files(self) -> list[FileDataset]:
         """

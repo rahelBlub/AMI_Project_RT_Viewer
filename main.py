@@ -13,6 +13,7 @@ if __name__ == "__main__":
     indexer = DicomIndexer("./data/RT")
 
     pat_list = indexer.get_patient_list()
+    print(pat_list)
 
     pat_handler = PatientHandler(pat_list[3], indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()

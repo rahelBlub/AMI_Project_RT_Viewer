@@ -10,7 +10,20 @@ class DicomIndexer:
         self._patient_list: list[str] = []
 
         self.root = root
-        self.index = defaultdict(lambda: defaultdict(dict))
+        #self.index = defaultdict(lambda: defaultdict(dict))
+        self.index = defaultdict(
+            lambda: defaultdict(
+                lambda: {
+                    "ct": [],
+                    "mr": [],
+                    "dose": [],
+                    "rtstruct": [],
+                    "rtplan": [],
+                    "seg": []
+                }
+            )
+        )
+
         self.has_rt_dose = False
         self.has_rt_structure = False
         self._json_file_name = "dicom_index.json"
@@ -42,19 +55,46 @@ class DicomIndexer:
 
                 entry = self.index[patient][study]
 
-                match modality:
-                    case "CT":
-                        entry["ct"] = path
-                    case "MR":
-                        entry["mr"] = path
-                    case "RTSTRUCT":
-                        entry["rtstruct"] = full_path
-                    case "RTDOSE":
-                        entry["dose"] = full_path
-                    case "SEG":
-                        entry["seg"] = full_path
-                    case _:
-                        break
+                if modality == "CT":
+                    if path not in [x["path"] for x in entry["ct"]]:
+                        entry["ct"].append({
+                            "path": path,
+                            "series_uid": ds.get("SeriesInstanceUID"),
+                            "description": ds.get("SeriesDescription", "")
+                        })
+
+                elif modality == "MR":
+                    if path not in [x["path"] for x in entry["mr"]]:
+                        entry["mr"].append({
+                            "path": path,
+                            "series_uid": ds.get("SeriesInstanceUID"),
+                            "description": ds.get("SeriesDescription", "")
+                        })
+
+                elif modality == "RTDOSE":
+                    entry["dose"].append({
+                        "path": full_path,
+                        "sop_uid": ds.get("SOPInstanceUID")
+                    })
+
+                elif modality == "RTSTRUCT":
+                    entry["rtstruct"].append({
+                        "path": full_path,
+                        "sop_uid": ds.get("SOPInstanceUID"),
+                        "description": ds.get("StructureSetLabel", "")
+                    })
+
+                elif modality == "RTPLAN":
+                    entry["rtplan"].append({
+                        "path": full_path,
+                        "sop_uid": ds.get("SOPInstanceUID")
+                    })
+
+                elif modality == "SEG":
+                    entry["seg"].append({
+                        "path": full_path,
+                        "description": ds.get("SeriesDescription", "")
+                    })
 
         return self.index
 
