@@ -7,15 +7,19 @@ class Patient:
         self.ct_studies = []
         self.mr_studies = []
 
-        self.rtstruct = []
+        self.rt_struct = []
         self.seg = []
-        self.dose = []
+        self.rt_dose = []
 
-    def has_ct(self):
+    def has_ct(self) -> bool:
         return len(self.ct_studies) > 0
 
-    def has_mr(self):
+    def has_mr(self) -> bool:
         return len(self.mr_studies) > 0
 
-    def has_dose(self):
-        return len(self.dose) > 0
+    def has_rt_dose(self) -> bool:
+        return len(self.rt_dose) > 0
+
+    def has_rt_struct(self) -> bool:
+        return len(self.rt_struct) > 0
+
