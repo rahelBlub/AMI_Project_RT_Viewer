@@ -7,9 +7,8 @@ from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
 from src.helper.dict_to_list import dict_to_list
+from src.helper.ui_theme import *
 
-FIG_WIDTH = 10
-FIG_HEIGHT = 8
 PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
 
@@ -34,12 +33,20 @@ class CTViewer:
         self.x_idx = volume.shape[2] // 2
 
         self._create_figure()
-        #self._create_images()
         self._create_image_view()
         self._create_sliders()
 
     def _create_figure(self):
-        self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
+        #self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
+        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT))
+        gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1]) # seperate space for global slider
+        gs_top = gs[0].subgridspec(2, 2)
+        gs_bottom = gs[1].subgridspec(2, 1)
+        #
+        # for ax in self.axs.flat:
+        #     ax.set_facecolor(AX_BG)
+        #     ax.set_xticks([])
+        #     ax.set_yticks([])
 
         # {
         #     0 "PatientName": image.PatientName,
@@ -69,37 +76,30 @@ class CTViewer:
             color='w'
         )
 
-        self.ax_axial = self.axs[0, 0]
-        self.ax_sagittal = self.axs[0, 1]
-        self.ax_coronal = self.axs[1, 1]
-        self.ax_overview = self.axs[1, 0]
+        # Bilder im oberen Grid anordnen
+        self.ax_axial = self.fig.add_subplot(gs_top[0, 0])
+        self.ax_sagittal = self.fig.add_subplot(gs_top[0, 1])
+        self.ax_coronal = self.fig.add_subplot(gs_top[1, 0])
+        self.ax_overview = self.fig.add_subplot(gs_top[1, 1])
+
+        # Achsen-Slider unter Bilder anordnen
+        self.ax_slider_z = self.slider_below(self.ax_axial, self.fig)
+        self.ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
+        self.ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
+
+        # extra Slider im unteren Grid anordnen
+        self.ax_window = self.fig.add_subplot(gs_bottom[0])
+        self.ax_slices = self.fig.add_subplot(gs_bottom[1])
+
+        # self.ax_axial = self.axs[0, 0]
+        # self.ax_sagittal = self.axs[0, 1]
+        # self.ax_coronal = self.axs[1, 1]
+        # self.ax_overview = self.axs[1, 0]
 
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
-
-    # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
-    def _create_image_view(self):
-        self.img_axial = self._create_image(
-            self.ax_axial,
-            self.z_idx,
-            "Axial",
-        )
-
-        self.img_coronal = self._create_image(
-            self.ax_coronal,
-            self.y_idx,
-            "Coronal",
-        )
-
-        self.img_sagittal = self._create_image(
-            self.ax_sagittal,
-            self.x_idx,
-            "Sagittal",
-        )
-
-        self.img_overview = self.ax_overview.imshow(self.overview_img)
-        self.ax_overview.set_title("Overview")
+        self.ax_overview.axis("off")
 
     def _get_slice(self, view: str, idx: int):
         if view == "Axial":
@@ -113,8 +113,7 @@ class CTViewer:
 
         raise ValueError("Unknown view")
 
-    # Funktion um ein Image zu erstellen
-    def _create_image(self, axis, idx: int, title: str):
+    def create_image(self, axis, idx: int, title: str):
         image, aspect = self._get_slice(title, idx)
 
         img = axis.imshow(
@@ -128,7 +127,45 @@ class CTViewer:
 
         return img
 
-    def slider_below(self, ax, fig, height=0.02, offset=0.04):
+    def render_dose(self, ax, dose):
+        return ax.imshow(
+            dose,
+            cmap=DOSE_COLORMAP,
+            alpha=DOSE_ALPHA
+        )
+
+    def render_seg(self, ax, seg):
+        return ax.imshow(
+            seg,
+            cmap=SEG_COLORMAP,
+            alpha=SEG_ALPHA
+        )
+
+    def _create_image_view(self):
+        self.img_axial = self.create_image(
+            self.ax_axial,
+            self.z_idx,
+            "Axial",
+        )
+
+        self.img_coronal = self.create_image(
+            self.ax_coronal,
+            self.y_idx,
+            "Coronal",
+        )
+
+        self.img_sagittal = self.create_image(
+            self.ax_sagittal,
+            self.x_idx,
+            "Sagittal",
+        )
+
+        self.img_overview = self.ax_overview.imshow(self.overview_img)
+        self.ax_overview.set_title("Overview")
+
+    # get image positions for slider orientation
+    @staticmethod
+    def slider_below(ax, fig, height=0.02, offset=0.04):
         bbox = ax.get_position()
 
         return fig.add_axes([
@@ -140,10 +177,8 @@ class CTViewer:
 
     def _create_sliders(self):
 
-        #TODO: FRONTEND - Die Slider überlagern die Bilder
-        ax_slider_z = self.slider_below(self.ax_axial, self.fig)
         self.slider_z = Slider(
-            ax_slider_z,
+            self.ax_slider_z,
             "Axial",
             0,
             self.volume.shape[0] - 1,
@@ -151,9 +186,8 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
         self.slider_y = Slider(
-            ax_slider_y,
+            self.ax_slider_y,
             "Coronal",
             0,
             self.volume.shape[1] - 1,
@@ -161,9 +195,8 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
         self.slider_x = Slider(
-            ax_slider_x,
+            self.ax_slider_x,
             "Sagittal",
             0,
             self.volume.shape[2] - 1,
@@ -171,23 +204,22 @@ class CTViewer:
             valstep=1,
         )
 
-
-        ax_wc = plt.axes((0.15, 0.20, 0.65, 0.03))
-        self.slider_wc = Slider(
-            ax_wc,
-            "Window Center (HU)",
+        self.slider_wc = create_slider(
+            self.ax_window,
+            "Window Center",
             -1000,
             1000,
-            valinit=self.window_center,
-        )
+            self.window_center,
+            SLIDER_ACTIVE)
 
-        ax_ww = plt.axes((0.15, 0.25, 0.65, 0.03))
-        self.slider_ww = Slider(
-            ax_ww,
+        self.slider_ww = create_slider(
+            self.ax_slices,
             "Window Width (HU)",
             1,
             3000,
-            valinit=self.window_width,
+            self.window_width,
+            SLIDER_ACTIVE,
+
         )
 
         self.slider_z.on_changed(self._update)
