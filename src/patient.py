@@ -32,23 +32,23 @@ class Patient:
         self._sop_instance_iud = in_iud
 
     def set_patient_age(self, age: str) -> None:
-        if age != '':
-            self._patient_age = int(re.sub(r'^0+|[A-Za-z]+$', '', age))
+        if age != "":
+            self._patient_age = int(re.sub(r"^0+|[A-Za-z]+$", "", age))
 
     def set_patient_sex(self, sex: str) -> None:
-        if sex != '':
+        if sex != "":
             self._patient_sex = sex
 
     def set_body_part_examined(self, body_part: str) -> None:
-        if body_part != '':
+        if body_part != "":
             self._body_part_examined = body_part
 
     def set_slice_thickness(self, thickness: str) -> None:
-        if thickness != '':
+        if thickness != "":
             self._slice_thickness = thickness
 
     def set_patient_position(self, position: str) -> None:
-        if position != '':
+        if position != "":
             self._patient_position = position
 
     def set_ct_data_available(self) -> None:
@@ -83,6 +83,7 @@ class Patient:
 
     def set_image_position_patient(self, in_var):
         self._image_position_patient = in_var
+
     # GETTER----------------------------------------------------
     def get_patient_name(self) -> str | None:
         return self._patient_name

@@ -87,7 +87,6 @@ class DicomHandler:
         """
         return data.Modality
 
-
     def get_rt_dose_volume(self):
         dose = self.ds.pixel_array.astype(np.float32)
 

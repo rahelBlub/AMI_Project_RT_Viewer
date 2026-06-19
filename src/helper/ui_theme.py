@@ -29,6 +29,7 @@ SEG_ALPHA = 0.25
 FIG_WIDTH = 10
 FIG_HEIGHT = 8
 
+
 def create_slider(ax, label, vmin, vmax, vinit, color):
     slider = Slider(ax, label, vmin, vmax, valinit=vinit, color=color)
 
@@ -36,16 +37,17 @@ def create_slider(ax, label, vmin, vmax, vinit, color):
 
     return slider
 
-#def image_style():
-    #plt.fig.set_facecolor("#1a1a1a")
-    #ax.axis("off")
-    # ax.set_xticks([])
-    # ax.set_yticks([])
-    # ax.axhline(y, color="red")
-    # ax.axvline(x, color="red")
 
-    # Dois overlay
-    #ax.imshow(dose, cmap="jet", alpha=0.4)
+# def image_style():
+# plt.fig.set_facecolor("#1a1a1a")
+# ax.axis("off")
+# ax.set_xticks([])
+# ax.set_yticks([])
+# ax.axhline(y, color="red")
+# ax.axvline(x, color="red")
 
-    # segmentation
-    #ax.imshow(seg_mask, cmap="Reds", alpha=0.3)
+# Dois overlay
+# ax.imshow(dose, cmap="jet", alpha=0.4)
+
+# segmentation
+# ax.imshow(seg_mask, cmap="Reds", alpha=0.3)

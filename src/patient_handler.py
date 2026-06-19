@@ -17,13 +17,13 @@ class PatientHandler:
                 cur_patient = ijson.items(file, self.patientName)
 
                 for json_item in cur_patient:
-                    #print(f"JSON item for {self.patientName}")
-                    #print(json_item)
+                    # print(f"JSON item for {self.patientName}")
+                    # print(json_item)
                     for data in json_item:
-                        #print(f"SOP Instance UID: {data}")
+                        # print(f"SOP Instance UID: {data}")
                         self.patient_obj.set_sop_instance_iud(data)
                         for plan_data in json_item[data]:
-                            #print(plan_data)
+                            # print(plan_data)
                             match plan_data:
                                 case "ct":
                                     self.patient_obj.set_ct_data_available()

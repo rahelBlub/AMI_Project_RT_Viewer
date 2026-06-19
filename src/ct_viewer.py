@@ -42,7 +42,9 @@ class CTViewer:
         print("Origin:", dose_img.GetOrigin())
         print("Direction:", dose_img.GetDirection())
 
-        self.dose_resampled = sitk.Resample(dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32)
+        self.dose_resampled = sitk.Resample(
+            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
+        )
         # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
         self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
 
@@ -60,19 +62,22 @@ class CTViewer:
     def _create_figure(self):
         # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
         self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT), constrained_layout=True)
-        gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1])  # seperate space for global slider
+        gs = self.fig.add_gridspec(
+            2, 1, height_ratios=[4, 1]
+        )  # seperate space for global slider
         gs_top = gs[0].subgridspec(2, 2)
         gs_bottom = gs[1].subgridspec(2, 1)
 
         self.fig.canvas.manager.set_window_title(
-            f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}")
+            f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}"
+        )
 
         self.fig.text(
             0.02,
             0.925,
             f"Body Part: {self.pat.get_body_part_examined()} \nSlice Thickness: {self.pat.get_slice_thickness()} \nPatient Position: {self.pat.get_patient_position()}",
             fontsize=12,
-            color='w'
+            color="w",
         )
 
         # Bilder im oberen Grid anordnen
@@ -166,9 +171,7 @@ class CTViewer:
         img.SetSpacing(spacing)
         # img.SetOrigin((origin))
         img.SetOrigin(origin)
-        img.SetDirection((1, 0, 0,
-                          0, 1, 0,
-                          0, 0, 1))
+        img.SetDirection((1, 0, 0, 0, 1, 0, 0, 0, 1))
         return img
 
     # TODO: Resampling in Handler auslagern evtl.
@@ -211,12 +214,7 @@ class CTViewer:
     def slider_below(ax, fig, height=0.02, offset=0.04):
         bbox = ax.get_position()
 
-        return fig.add_axes([
-            bbox.x0,
-            bbox.y0 - offset,
-            bbox.width,
-            height
-        ])
+        return fig.add_axes([bbox.x0, bbox.y0 - offset, bbox.width, height])
 
     def _create_sliders(self):
 
@@ -253,7 +251,8 @@ class CTViewer:
             -1000,
             1000,
             self.window_center,
-            SLIDER_ACTIVE)
+            SLIDER_ACTIVE,
+        )
 
         self.slider_ww = create_slider(
             self.ax_slices,
@@ -262,7 +261,6 @@ class CTViewer:
             3000,
             self.window_width,
             SLIDER_ACTIVE,
-
         )
 
         self.slider_z.on_changed(self._update)
@@ -278,9 +276,21 @@ class CTViewer:
         self.window_center = self.slider_wc.val
         self.window_width = self.slider_ww.val
 
-        self.img_axial.set_data(self.apply_window(self.volume[z, :, :], self.window_center, self.window_width))
-        self.img_sagittal.set_data(self.apply_window(self.volume[:, :, x], self.window_center, self.window_width))
-        self.img_coronal.set_data(self.apply_window(self.volume[:, y, :], self.window_center, self.window_width))
+        self.img_axial.set_data(
+            self.apply_window(
+                self.volume[z, :, :], self.window_center, self.window_width
+            )
+        )
+        self.img_sagittal.set_data(
+            self.apply_window(
+                self.volume[:, :, x], self.window_center, self.window_width
+            )
+        )
+        self.img_coronal.set_data(
+            self.apply_window(
+                self.volume[:, y, :], self.window_center, self.window_width
+            )
+        )
 
         if self.dose_volume is not None:
             self.dose_axial.set_data(self.dose_volume[z, :, :])

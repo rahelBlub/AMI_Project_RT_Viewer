@@ -77,16 +77,9 @@ class DicomIndexer:
 
             for f in files:
                 try:
-                    ds = pydicom.dcmread(
-                        os.path.join(path, f),
-                        stop_before_pixels=True
-                    )
+                    ds = pydicom.dcmread(os.path.join(path, f), stop_before_pixels=True)
 
-                    print(
-                        f"{ds.Modality:10}",
-                        ds.get("SeriesDescription", "---"),
-                        path
-                    )
+                    print(f"{ds.Modality:10}", ds.get("SeriesDescription", "---"), path)
 
                     break
 
