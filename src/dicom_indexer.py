@@ -52,6 +52,8 @@ class DicomIndexer:
                         entry["dose"] = full_path
                     case "SEG":
                         entry["seg"] = full_path
+                    case _:
+                        break
 
         return self.index
 
@@ -63,7 +65,7 @@ class DicomIndexer:
         """
         returns full json-file directory path
         """
-        return os.curdir.join(self._json_file_name)
+        return self._json_file_name
 
     def get_patient_list(self) -> list[str]:
         return self._patient_list

@@ -1,8 +1,8 @@
 import re
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import axes
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
@@ -17,7 +17,7 @@ class CTViewer:
     INTERPOLATION = "nearest"
 
     def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], metadata: dict, dose_volume=None, dose_alpha=0.4):
-        self.overview_img = mpimg.imread(PATIENT_VIEW_PATH)
+        self.overview_img = mpimg.imread("./data/images/patient_planes.png")
         self.metadata: dict[str, str] = metadata
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing

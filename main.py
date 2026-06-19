@@ -3,6 +3,7 @@ from networkx.algorithms.cuts import volume
 from src.ct_viewer import CTViewer
 from src.dicom_handler import DicomHandler
 from src.dicom_indexer import DicomIndexer
+from src.patient_handler import PatientHandler
 
 #TODO: am Ende evtl anpassen, sodass man
 # das Programm via shell aufrufen kann mit
@@ -14,9 +15,13 @@ if __name__ == "__main__":
     index = indexer.build()
     indexer.save()
 
-    # print(indexer.get_patient_list())
+    pat_list = indexer.get_patient_list()
 
-    patients = list(index.keys())
+    pat_handler = PatientHandler(pat_list[0], indexer.get_json_file_dir())
+    cur_pat = pat_handler.get_pat_obj()
+
+    print("hier")
+    # patients = list(index.keys())
     # print(patients)
     #
     # # Bekky: hab idx = 0 weil der existiert immer
