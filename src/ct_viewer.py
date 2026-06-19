@@ -10,15 +10,15 @@ from src.helper.dict_to_list import dict_to_list
 
 FIG_WIDTH = 10
 FIG_HEIGHT = 8
+PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
 
 class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
-    PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
     def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], metadata: dict, dose_volume=None, dose_alpha=0.4):
-        self.overview_img = mpimg.imread("./data/images/patient_planes.png")
+        self.overview_img = mpimg.imread(PATIENT_VIEW_PATH)
         self.metadata: dict[str, str] = metadata
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
