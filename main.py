@@ -1,5 +1,3 @@
-from networkx.algorithms.cuts import volume
-
 from src.ct_viewer import CTViewer
 from src.dicom_handler import DicomHandler
 from src.dicom_indexer import DicomIndexer
