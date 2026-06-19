@@ -131,6 +131,9 @@ class CTViewer:
         return ct_img, dose_img
 
     # TODO: die Patient ImagePositionPatient stimmt irgendwie nicht, Datentyp übeprüfen
+    # Bekky: hab ein paar Ergänzungen zur Typsicherheit im Setter gemacht, musst ggf auf
+    # None abfragen, falls die Daten nicht vorhanden sind
+
     def get_ct_image(self):
         img = sitk.GetImageFromArray(self.volume.astype(np.float32))
         #origin = self.pat.get_patient_position()

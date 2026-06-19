@@ -7,9 +7,6 @@ import json
 class DicomIndexer:
 
     def __init__(self, root):
-        #TODO: schauen ob Verzeichnis schon existiert,
-        # damit es nicht mehrfach komplett laufen muss
-        # mit hashing abfragen ob sich was geändert hat
         self._patient_list: list[str] = []
 
         self.root = root
