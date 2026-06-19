@@ -20,6 +20,7 @@ if __name__ == "__main__":
     pat_handler = PatientHandler(pat_list[0], indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()
 
+    d_handler = DicomHandler(cur_pat)
     print("hier")
     # patients = list(index.keys())
     # print(patients)
