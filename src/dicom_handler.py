@@ -111,8 +111,13 @@ class DicomHandler:
     def get_metadata_to_patient(self):
         image = self._dicom_list[0]
 
-        self._pat.set_patient_age(image.PatientAge)
-        self._pat.set_patient_sex(image.PatientSex)
-        self._pat.set_body_part_examined(image.BodyPartExamined)
-        self._pat.set_slice_thickness(image.SliceThickness)
-        self._pat.set_patient_position(image.PatientPosition)
+        if image.__contains__("PatientAge"):
+            self._pat.set_patient_age(image.PatientAge)
+        if image.__contains__("PatientSex"):
+            self._pat.set_patient_sex("PatientSex")
+        if image.__contains__("BodyPartExamined"):
+            self._pat.set_body_part_examined("BodyPartExamined")
+        if image.__contains__("SliceThickness"):
+            self._pat.set_slice_thickness("SliceThickness")
+        if image.__contains__("PatientPosition"):
+            self._pat.set_patient_position("PatientPosition")

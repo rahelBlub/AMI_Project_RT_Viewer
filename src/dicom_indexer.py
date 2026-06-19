@@ -3,8 +3,6 @@ import pydicom
 from collections import defaultdict
 import json
 
-from scipy.stats import false_discovery_control
-
 
 class DicomIndexer:
 
@@ -19,6 +17,12 @@ class DicomIndexer:
         self.has_rt_dose = False
         self.has_rt_structure = False
         self._json_file_name = "dicom_index.json"
+
+        if not self.is_json_complete():
+            self.build()
+            self.save()
+        else:
+            pass
 
     def build(self):
         for path, _, files in os.walk(self.root):
@@ -91,3 +95,19 @@ class DicomIndexer:
 
                 except Exception:
                     pass
+
+    def is_json_complete(self) -> bool:
+        data_dir = "./data/RT"
+        dir_list = os.listdir(data_dir)
+
+        try:
+            with open(self._json_file_name, "r") as file:
+                data = json.load(file)
+                data_list = data.keys()
+                self._patient_list = [str(item) for item in data_list]
+
+                return len(data) == len(dir_list)
+
+        except FileNotFoundError:
+            print("JSON File not found!!!")
+            return False

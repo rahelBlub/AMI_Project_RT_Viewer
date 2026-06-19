@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-## TODO: Patienten für jeden Ordner anlegen und am Anfang im Viewer auswählbar
 
 
 @dataclass
