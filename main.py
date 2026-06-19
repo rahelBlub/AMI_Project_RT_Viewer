@@ -31,7 +31,8 @@ if __name__ == "__main__":
     #volume = d_handler.create_ct_volume() # mit windowing nur noch mit HU Werten!
     volume = d_handler.create_ct_volume_with_HU()
     voxelspacing = d_handler.get_voxelspacing()
+    metadata = d_handler.get_metadata()
 
-    viewer = CTViewer(volume, voxelspacing)
+    viewer = CTViewer(volume, voxelspacing, metadata)
     viewer.show()
 
