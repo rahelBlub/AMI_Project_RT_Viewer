@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import axes
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
@@ -52,8 +53,6 @@ class CTViewer:
             self.z_idx,
             "Axial",
         )
-        #self._create_slider()
-        # self._create_metadata() # TODO: Funktion die Metadaten des Bildes anzeigt
 
         self.img_coronal = self._create_image(
             self.ax_coronal,
@@ -67,23 +66,24 @@ class CTViewer:
             "Sagittal",
         )
 
+        self.img_overview = self.ax_overview.imshow(self.overview_img)
+        self.ax_overview.set_title("Overview")
+
+    def _get_slice(self, view: str, idx: int):
+        if view == "Axial":
+            return self.volume[idx, :, :], self.dy / self.dx
+
+        if view == "Coronal":
+            return self.volume[:, idx, :], self.dz / self.dx
+
+        if view == "Sagittal":
+            return self.volume[:, :, idx], self.dz / self.dy
+
+        raise ValueError("Unknown view")
 
     # Funktion um ein Image zu erstellen
     def _create_image(self, axis, idx: int, title: str):
-        if title== "Axial":
-            image = self.volume[idx, :, :]
-            aspect = self.dy / self.dx
-
-        elif title == "Coronal":
-            image = self.volume[:, idx, :]
-            aspect = self.dz / self.dx
-
-        elif title == "Sagittal":
-            image = self.volume[:, :, idx]
-            aspect = self.dz / self.dy
-
-        else:
-            raise ValueError(f"Unknown view: {title}")
+        image, aspect = self._get_slice(title, idx)
 
         img = axis.imshow(
             self.apply_window(
@@ -100,12 +100,20 @@ class CTViewer:
 
         return img
 
-    #def _create_slider(self):
+    def slider_below(self, ax, fig, height=0.02, offset=0.04):
+        bbox = ax.get_position()
+
+        return fig.add_axes([
+            bbox.x0,
+            bbox.y0 - offset,
+            bbox.width,
+            height
+        ])
 
     def _create_sliders(self):
-
         #TODO: FRONTEND - Die Slider überlagern die Bilder
-        ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
+        ax_slider_z = self.slider_below(self.ax_axial, self.fig)
+
         self.slider_z = Slider(
             ax_slider_z,
             "Axial",
@@ -115,7 +123,7 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_y = plt.axes((0.15, 0.10, 0.65, 0.03))
+        ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
         self.slider_y = Slider(
             ax_slider_y,
             "Coronal",
@@ -125,7 +133,7 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_x = plt.axes((0.15, 0.05, 0.65, 0.03))
+        ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
         self.slider_x = Slider(
             ax_slider_x,
             "Sagittal",
