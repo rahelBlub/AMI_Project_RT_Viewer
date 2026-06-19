@@ -7,6 +7,10 @@ import json
 class DicomIndexer:
 
     def __init__(self, root):
+        #TODO: schauen ob Verzeichnis schon existiert,
+        # damit es nicht mehrfach komplett laufen muss
+        # mit hashing abfragen ob sich was geändert hat
+
         self.root = root
         self.index = defaultdict(lambda: defaultdict(dict))
 
