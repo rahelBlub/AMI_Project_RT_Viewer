@@ -6,7 +6,7 @@ from matplotlib import axes
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
-from helper.dict_to_list import dict_to_list
+from src.helper.dict_to_list import dict_to_list
 
 FIG_WIDTH = 10
 FIG_HEIGHT = 8
