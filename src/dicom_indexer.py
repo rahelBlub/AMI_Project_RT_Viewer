@@ -3,6 +3,8 @@ import pydicom
 from collections import defaultdict
 import json
 
+from scipy.stats import false_discovery_control
+
 
 class DicomIndexer:
 
@@ -13,6 +15,8 @@ class DicomIndexer:
 
         self.root = root
         self.index = defaultdict(lambda: defaultdict(dict))
+        self.has_rt_dose = False
+        self.has_rt_structure = False
 
     def build(self):
         for path, _, files in os.walk(self.root):

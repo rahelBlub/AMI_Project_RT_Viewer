@@ -1,9 +1,13 @@
 import re
+
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib import axes
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
+
+from helper.dict_to_list import dict_to_list
 
 FIG_WIDTH = 10
 FIG_HEIGHT = 8
@@ -74,6 +78,7 @@ class CTViewer:
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
+        # plt.subplots_adjust(bottom=0.25)
 
     # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
     def _create_image_view(self):
