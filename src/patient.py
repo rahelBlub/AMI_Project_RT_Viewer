@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 ## TODO: Patienten für jeden Ordner anlegen und am Anfang im Viewer auswählbar
 
@@ -5,57 +6,91 @@ from dataclasses import dataclass
 @dataclass
 class Patient:
     def __init__(self, patient_name):
-        self._patient_name = patient_name
-        self._sop_instance_iud = ""
+        self._patient_name: str = patient_name
+        self._sop_instance_iud: str | None = None
+        self._patient_age: int | None = None
+        self._patient_sex: str | None = None
+        self._body_part_examined: str | None = None
+        self._slice_thickness: str | None = None
+        self._patient_position: str | None = None
 
-        self._has_ct_studies = False
-        self._has_mr_studies = False
-        self._has_rt_struct = False
-        self._has_rt_dose = False
-        self._has_seg = False
+        self._has_ct_studies: bool = False
+        self._has_mr_studies: bool = False
+        self._has_rt_struct: bool = False
+        self._has_rt_dose: bool = False
+        self._has_seg: bool = False
 
-        self._ct_path = ""
-        self._mr_path = ""
-        self._rt_struct_path = ""
-        self._rt_dose_path = ""
-        self._seg_path = ""
+        self._ct_path: str | None = None
+        self._mr_path: str | None = None
+        self._rt_struct_path: str | None = None
+        self._rt_dose_path: str | None = None
+        self._seg_path: str | None = None
 
     # SETTER----------------------------------------------------
-
-    def set_ct_data_available(self):
-        self._has_ct_studies = True
-
-    def set_mr_data_available(self):
-        self._has_mr_studies = True
-
-    def set_rt_struct_data_available(self):
-        self._has_rt_struct = True
-
-    def set_rt_dose_data_available(self):
-        self._has_rt_dose = True
-
-    def set_seg_data_available(self):
-        self._has_seg = True
-
     def set_sop_instance_iud(self, in_iud):
         self._sop_instance_iud = in_iud
 
-    def set_ct_path(self, in_path):
+    def set_patient_age(self, age: str) -> None:
+        self._patient_age = int(re.sub(r'^0+|[A-Za-z]+$', '', age))
+
+    def set_patient_sex(self, sex: str) -> None:
+        self._patient_sex = sex
+
+    def set_body_part_examined(self, body_part: str) -> None:
+        self._body_part_examined = body_part
+
+    def set_slice_thickness(self, thickness: str) -> None:
+        self._slice_thickness = thickness
+
+    def set_patient_position(self, position: str) -> None:
+        self._patient_position = position
+
+    def set_ct_data_available(self) -> None:
+        self._has_ct_studies = True
+
+    def set_mr_data_available(self) -> None:
+        self._has_mr_studies = True
+
+    def set_rt_struct_data_available(self) -> None:
+        self._has_rt_struct = True
+
+    def set_rt_dose_data_available(self) -> None:
+        self._has_rt_dose = True
+
+    def set_seg_data_available(self) -> None:
+        self._has_seg = True
+
+    def set_ct_path(self, in_path) -> None:
         self._ct_path = in_path
 
-    def set_mr_path(self, in_path):
+    def set_mr_path(self, in_path) -> None:
         self._mr_path = in_path
 
-    def set_rt_struct_path(self, in_path):
+    def set_rt_struct_path(self, in_path) -> None:
         self._rt_struct_path = in_path
 
-    def set_rt_dose_path(self, in_path):
+    def set_rt_dose_path(self, in_path) -> None:
         self._rt_dose_path = in_path
 
-    def set_seg_path(self, in_path):
+    def set_seg_path(self, in_path) -> None:
         self._seg_path = in_path
 
     # GETTER----------------------------------------------------
+    def get_patient_age(self) -> int | None:
+        return self._patient_age
+
+    def get_patient_sex(self) -> str | None:
+        return self._patient_sex
+
+    def get_body_part_examined(self) -> str | None:
+        return self._body_part_examined
+
+    def get_slice_thickness(self) -> str | None:
+        return self._slice_thickness
+
+    def get_patient_position(self) -> str | None:
+        return self._patient_position
+
     def get_ct_data_available(self) -> bool:
         return self._has_ct_studies
 
@@ -71,17 +106,17 @@ class Patient:
     def get_seg_available(self) -> bool:
         return self._has_seg
 
-    def get_ct_path(self) -> str:
+    def get_ct_path(self) -> str | None:
         return self._ct_path
 
-    def get_mr_path(self) -> str:
+    def get_mr_path(self) -> str | None:
         return self._mr_path
 
-    def get_rt_struct_path(self) -> str:
+    def get_rt_struct_path(self) -> str | None:
         return self._rt_struct_path
 
-    def get_rt_dose_path(self) -> str:
+    def get_rt_dose_path(self) -> str | None:
         return self._rt_dose_path
 
-    def get_seg_path(self) -> str:
+    def get_seg_path(self) -> str | None:
         return self._seg_path
