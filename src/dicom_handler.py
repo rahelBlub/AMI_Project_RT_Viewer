@@ -9,9 +9,13 @@ from src.patient import Patient
 
 
 class DicomHandler:
-    def __init__(self, dicom_dir: str):
-        self.dcm_data_dir = dicom_dir
+    def __init__(self, pat: Patient):
+        self._pat = pat
+
+        self.dcm_data_dir = self._pat.get_ct_path()
         self._dicom_list = self._get_dcm_files()
+
+        self.get_metadata_to_patient()
 
     def _get_dcm_files(self) -> list[FileDataset]:
         """
@@ -99,12 +103,11 @@ class DicomHandler:
             "PatientPosition": image.PatientPosition,
         }
 
-    def get_metadata_to_patient(self, pat: Patient):
+    def get_metadata_to_patient(self):
         image = self._dicom_list[0]
 
-        pat.set_patient_age(image.PatientAge)
-        pat.set_patient_sex(image.PatientSex)
-        pat.set_body_part_examined(image.BodyPartExamined)
-        pat.set_slice_thickness(image.SliceThickness)
-        pat.set_patient_position(image.PatientPosition)
-
+        self._pat.set_patient_age(image.PatientAge)
+        self._pat.set_patient_sex(image.PatientSex)
+        self._pat.set_body_part_examined(image.BodyPartExamined)
+        self._pat.set_slice_thickness(image.SliceThickness)
+        self._pat.set_patient_position(image.PatientPosition)
