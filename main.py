@@ -17,8 +17,9 @@ if __name__ == "__main__":
     patients = list(index.keys())
     print(patients)
 
-    study_uid = list(index[patients[3]].keys())[0]
-    ct_path = index[patients[3]][study_uid]["ct"]
+    # Bekky: hab idx = 0 weil der existiert immer
+    study_uid = list(index[patients[0]].keys())[0]
+    ct_path = index[patients[0]][study_uid]["ct"]
 
     #p7_uid = list(index[patients[6]].keys())[0]
     #mr_path = index[patients[6]][p7_uid]["mr"]
