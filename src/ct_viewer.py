@@ -3,6 +3,10 @@ import numpy as np
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
+FIG_WIDTH = 10
+FIG_HEIGHT = 8
+
+
 class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
@@ -29,7 +33,7 @@ class CTViewer:
         self._create_sliders()
 
     def _create_figure(self):
-        self.fig, self.axs = plt.subplots(2, 2, figsize=(10, 8))
+        self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
 
         self.ax_axial = self.axs[0, 0]
         self.ax_sagittal = self.axs[0, 1]
