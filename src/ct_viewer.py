@@ -2,6 +2,7 @@ import re
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import axes
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
@@ -31,7 +32,8 @@ class CTViewer:
         self.x_idx = volume.shape[2] // 2
 
         self._create_figure()
-        self._create_images()
+        #self._create_images()
+        self._create_image_view()
         self._create_sliders()
 
     def _create_figure(self):
@@ -75,8 +77,46 @@ class CTViewer:
         self.ax_coronal.axis("off")
         # plt.subplots_adjust(bottom=0.25)
 
-    def _create_images(self):
-        self.img_axial = self.ax_axial.imshow(
+    # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
+    def _create_image_view(self):
+        self.img_axial = self._create_image(
+            self.ax_axial,
+            self.z_idx,
+            "Axial",
+        )
+
+        self.img_coronal = self._create_image(
+            self.ax_coronal,
+            self.y_idx,
+            "Coronal",
+        )
+
+        self.img_sagittal = self._create_image(
+            self.ax_sagittal,
+            self.x_idx,
+            "Sagittal",
+        )
+
+        self.img_overview = self.ax_overview.imshow(self.overview_img)
+        self.ax_overview.set_title("Overview")
+
+    def _get_slice(self, view: str, idx: int):
+        if view == "Axial":
+            return self.volume[idx, :, :], self.dy / self.dx
+
+        if view == "Coronal":
+            return self.volume[:, idx, :], self.dz / self.dx
+
+        if view == "Sagittal":
+            return self.volume[:, :, idx], self.dz / self.dy
+
+        raise ValueError("Unknown view")
+
+    # Funktion um ein Image zu erstellen
+    def _create_image(self, axis, idx: int, title: str):
+        image, aspect = self._get_slice(title, idx)
+
+        img = axis.imshow(
             self.apply_window(
                 self.volume[self.z_idx, :, :],
                 self.window_center,
@@ -112,7 +152,7 @@ class CTViewer:
 
     def _create_sliders(self):
 
-        # TODO: FRONTEND - Die Slider überlagern die Bilder
+        #TODO: FRONTEND - Die Slider überlagern die Bilder
         ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
         self.slider_z = Slider(
             ax_slider_z,
@@ -213,10 +253,3 @@ class CTViewer:
         'blackman'
         """
         self.INTERPOLATION = new_interpolation
-
-
-def dict_to_list(in_dict: dict) -> list[str]:
-    out_list = []
-    for _, value in in_dict.items():
-        out_list.append(str(value))
-    return out_list
