@@ -1,7 +1,6 @@
 import matplotlib as mpl
 from matplotlib.widgets import Slider
 import matplotlib.pyplot as plt
-from matplotlib import axes
 
 mpl.rcParams["figure.facecolor"] = "#121212"
 mpl.rcParams["axes.facecolor"] = "#121212"

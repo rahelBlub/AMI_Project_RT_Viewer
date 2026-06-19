@@ -1,14 +1,8 @@
-import re
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import axes
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 import SimpleITK as sitk
 
 from src.patient import Patient
-from src.helper.dict_to_list import dict_to_list
 from src.helper.ui_theme import *
 from src.dicom_handler import DicomHandler
 
@@ -20,7 +14,7 @@ class CTViewer:
     INTERPOLATION = "nearest"
 
     def __init__(self, patient: Patient):
-        self.overview_img = mpimg.imread("./data/images/patient_planes.png")
+        self.overview_img = mpimg.imread(PATIENT_VIEW_PATH)
 
         self.pat = patient
         d_handler = DicomHandler(patient)
