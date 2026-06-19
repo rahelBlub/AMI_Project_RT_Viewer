@@ -20,33 +20,33 @@ class CTViewer:
         d_handler = DicomHandler(patient)
         self.volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-        # self.dose_volume = d_handler.get_rtdose()
+        self.dose_volume = None
 
         # TODO: Resampling-kacke nochmal genauer anschauen checke es gerade nicht
         # Bekky: ich hab das gefunden https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
         # resampling RT Dose
         ct_img = self.get_ct_image(d_handler.get_patient_image_position_patient())
-        dose_img = d_handler.get_dose_image()
+        #dose_img = d_handler.get_dose_image()
 
-        print("CT")
-        print("Size:", ct_img.GetSize())
-        print("Spacing:", ct_img.GetSpacing())
-        print("Origin:", ct_img.GetOrigin())
-        print("Direction:", ct_img.GetDirection())
+        # print("CT")
+        # print("Size:", ct_img.GetSize())
+        # print("Spacing:", ct_img.GetSpacing())
+        # print("Origin:", ct_img.GetOrigin())
+        # print("Direction:", ct_img.GetDirection())
+        #
+        # print()
+        #
+        # print("DOSE")
+        # print("Size:", dose_img.GetSize())
+        # print("Spacing:", dose_img.GetSpacing())
+        # print("Origin:", dose_img.GetOrigin())
+        # print("Direction:", dose_img.GetDirection())
 
-        print()
-
-        print("DOSE")
-        print("Size:", dose_img.GetSize())
-        print("Spacing:", dose_img.GetSpacing())
-        print("Origin:", dose_img.GetOrigin())
-        print("Direction:", dose_img.GetDirection())
-
-        self.dose_resampled = sitk.Resample(
-            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
-        )
-        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
-        self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
+        # self.dose_resampled = sitk.Resample(
+        #     dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
+        # )
+        # # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
+        # self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
 
         self.window_center = 40
         self.window_width = 400
@@ -133,21 +133,21 @@ class CTViewer:
             aspect=aspect,
         )
 
-        if self.dose_volume is not None:
-            dose_slice, _ = self._get_slice(view, idx)
-
-            dose_img = axis.imshow(
-                dose_slice,
-                cmap="jet",
-                alpha=0.35,
-                vmin=0,
-                vmax=np.max(self.dose_volume),
-                aspect=aspect,
-            )
+        # if self.dose_volume is not None:
+        #     dose_slice, _ = self._get_slice(view, idx)
+        #
+        #     dose_img = axis.imshow(
+        #         dose_slice,
+        #         cmap="jet",
+        #         alpha=0.35,
+        #         vmin=0,
+        #         vmax=np.max(self.dose_volume),
+        #         aspect=aspect,
+        #     )
 
         axis.set_title(view)
 
-        return ct_img, dose_img
+        return ct_img #, dose_img
 
     # TODO: die Patient ImagePositionPatient stimmt irgendwie nicht, Datentyp übeprüfen
     # Bekky: hab ein paar Ergänzungen zur Typsicherheit im Setter gemacht, musst ggf auf
@@ -181,6 +181,7 @@ class CTViewer:
 
         return resampler.Execute(moving)
 
+    # TODO: image und rt_dose separat! Wartung so schwierig
     def _create_image_view(self):
         self.img_axial, self.dose_axial = self.create_image(
             self.ax_axial,

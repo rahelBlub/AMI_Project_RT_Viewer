@@ -4,28 +4,38 @@ import pydicom
 from pydicom import FileDataset
 import SimpleITK as sitk
 
-from src.patient import Patient
-
+#from src.patient import Patient
+from src.putzies import Patient
 
 class DicomHandler:
     def __init__(self, pat: Patient):
         self._pat = pat
 
-        self.dcm_data_dir = self._pat.get_ct_path()
+        #self.dcm_data_dir = self._pat.get_ct_path()
+        self.dcm_data_dir = self._pat.get_active_ct_path()
         self._dicom_list = self._get_dcm_files()
+
+        if not self.dcm_data_dir:
+            raise ValueError("Patient has no CT path assigned (None)")
 
         self.get_metadata_to_patient()
 
-
     def _get_dcm_files(self) -> list[FileDataset]:
-        """
-        creates a list of FileDataset, containing the dicom data
-        """
-        files = [
-            pydicom.dcmread(os.path.join(self.dcm_data_dir, f))
-            for f in os.listdir(self.dcm_data_dir)
-            if f.endswith(".dcm")
-        ]
+        files = []
+
+        for root, _, filenames in os.walk(self.dcm_data_dir):
+            for f in filenames:
+                if not f.lower().endswith(".dcm"):
+                    continue
+
+                full_path = os.path.join(root, f)
+
+                try:
+                    ds = pydicom.dcmread(full_path)
+                    files.append(ds)
+                except Exception:
+                    continue
+
         return files
 
     def _sort_dicom_list(self) -> None:
