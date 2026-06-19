@@ -24,7 +24,8 @@ class CTViewer:
         self.x_idx = volume.shape[2] // 2
 
         self._create_figure()
-        self._create_images()
+        #self._create_images()
+        self._create_image_view()
         self._create_sliders()
 
     def _create_figure(self):
@@ -40,40 +41,62 @@ class CTViewer:
         self.ax_coronal.axis("off")
         #plt.subplots_adjust(bottom=0.25)
 
-    def _create_images(self):
-        self.img_axial = self.ax_axial.imshow(
+    # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
+    def _create_image_view(self):
+        self.img_axial = self._create_image(
+            self.ax_axial,
+            self.z_idx,
+            "Axial",
+        )
+        #self._create_slider()
+        # self._create_metadata() # TODO: Funktion die Metadaten des Bildes anzeigt
+
+        self.img_coronal = self._create_image(
+            self.ax_coronal,
+            self.y_idx,
+            "Coronal",
+        )
+
+        self.img_sagittal = self._create_image(
+            self.ax_sagittal,
+            self.x_idx,
+            "Sagittal",
+        )
+
+
+    # Funktion um ein Image zu erstellen
+    def _create_image(self, axis, idx: int, title: str):
+        if title== "Axial":
+            image = self.volume[idx, :, :]
+            aspect = self.dy / self.dx
+
+        elif title == "Coronal":
+            image = self.volume[:, idx, :]
+            aspect = self.dz / self.dx
+
+        elif title == "Sagittal":
+            image = self.volume[:, :, idx]
+            aspect = self.dz / self.dy
+
+        else:
+            raise ValueError(f"Unknown view: {title}")
+
+        img = axis.imshow(
             self.apply_window(
-                self.volume[self.z_idx, :, :],
+                image,
                 self.window_center,
                 self.window_width,
             ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
-            aspect=self.dy / self.dx,
+            aspect=aspect,
         )
-        self.ax_axial.set_title("Axial")
 
-        self.img_sagittal = self.ax_sagittal.imshow(
-            self.apply_window(self.volume[:, :, self.x_idx],
-                              self.window_center,
-                              self.window_width,
-                              ),
-            cmap=self.CMAP,
-            interpolation=self.INTERPOLATION,
-            aspect=self.dz / self.dy,
-        )
-        self.ax_sagittal.set_title("Sagittal")
+        axis.set_title(title)
 
-        self.img_coronal = self.ax_coronal.imshow(
-            self.apply_window(self.volume[:, self.y_idx, :], self.window_center, self.window_width),
-            cmap=self.CMAP,
-            interpolation=self.INTERPOLATION,
-            aspect=self.dz / self.dx,
-        )
-        self.ax_coronal.set_title("Coronal")
+        return img
 
-        self.img_overview = self.ax_overview.imshow(self.overview_img)
-        self.ax_overview.set_title("Overview")
+    #def _create_slider(self):
 
     def _create_sliders(self):
 
