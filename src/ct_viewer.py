@@ -25,7 +25,7 @@ class CTViewer:
         d_handler = DicomHandler(patient)
         self.volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-        self.dose_volume = patient.get_rt_dose_path()
+        self.dose_volume = d_handler.get_rtdose() # patient.get_rt_dose_path() # TODO: Funktion get_dose_volume
 
         self.window_center = 40
         self.window_width = 400
@@ -40,15 +40,10 @@ class CTViewer:
 
     def _create_figure(self):
         #self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
-        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT))
+        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT),constrained_layout=True)
         gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1]) # seperate space for global slider
         gs_top = gs[0].subgridspec(2, 2)
         gs_bottom = gs[1].subgridspec(2, 1)
-        #
-        # for ax in self.axs.flat:
-        #     ax.set_facecolor(AX_BG)
-        #     ax.set_xticks([])
-        #     ax.set_yticks([])
 
         self.fig.canvas.manager.set_window_title(f"{self.pat.get_patient_name()} {self.pat.get_patient_age()} {self.pat.get_patient_sex()}")
 
@@ -74,6 +69,11 @@ class CTViewer:
         # extra Slider im unteren Grid anordnen
         self.ax_window = self.fig.add_subplot(gs_bottom[0])
         self.ax_slices = self.fig.add_subplot(gs_bottom[1])
+
+        for ax in [self.ax_axial, self.ax_sagittal, self.ax_coronal]:
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_frame_on(False)
 
         # self.ax_axial = self.axs[0, 0]
         # self.ax_sagittal = self.axs[0, 1]
@@ -112,11 +112,14 @@ class CTViewer:
         return img
 
     def render_dose(self, ax, dose):
-        return ax.imshow(
-            dose,
-            cmap=DOSE_COLORMAP,
-            alpha=DOSE_ALPHA
-        )
+        # return ax.imshow(
+        #     dose,
+        #     cmap=DOSE_COLORMAP,
+        #     alpha=DOSE_ALPHA
+        # )
+        plt.imshow(dose[dose.shape[0] // 2], cmap="jet")
+        plt.colorbar(label="Dose [Gy]")
+        plt.show()
 
     def render_seg(self, ax, seg):
         return ax.imshow(
@@ -131,8 +134,7 @@ class CTViewer:
             self.z_idx,
             "Axial",
         )
-        # if-Abfrage ob rt_dose vorhanden
-        # render_dose()
+        self.render_dose(self.dose_volume)
 
         self.img_coronal = self.create_image(
             self.ax_coronal,
@@ -165,7 +167,7 @@ class CTViewer:
 
         self.slider_z = Slider(
             self.ax_slider_z,
-            "Axial",
+            "A",
             0,
             self.volume.shape[0] - 1,
             valinit=self.z_idx,
@@ -174,7 +176,7 @@ class CTViewer:
 
         self.slider_y = Slider(
             self.ax_slider_y,
-            "Coronal",
+            "C",
             0,
             self.volume.shape[1] - 1,
             valinit=self.y_idx,
@@ -183,7 +185,7 @@ class CTViewer:
 
         self.slider_x = Slider(
             self.ax_slider_x,
-            "Sagittal",
+            "S",
             0,
             self.volume.shape[2] - 1,
             valinit=self.x_idx,

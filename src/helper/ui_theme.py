@@ -9,7 +9,7 @@ mpl.rcParams["text.color"] = "white"
 mpl.rcParams["xtick.color"] = "white"
 mpl.rcParams["ytick.color"] = "white"
 
-#plt.rcParams["figure.facecolor"] = "#0e0e0e"
+plt.rcParams["figure.constrained_layout.use"] = True
 plt.rcParams["figure.facecolor"] = "black"
 
 SLIDER_BG = "#1e1e1e"

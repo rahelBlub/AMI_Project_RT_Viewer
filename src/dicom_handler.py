@@ -86,10 +86,15 @@ class DicomHandler:
         """
         return data.Modality
 
-    def get_rtdose(self, data: FileDataset) -> float:
-        if data.Modality == "RTDOSE":
-            return data.RTDOSE
-        return 0.0
+    def get_rtdose(self):
+        self.ds = pydicom.dcmread(self._pat.get_rt_dose_path())
+        dose = self.ds.pixel_array.astype(np.float32)
+
+        scaling = float(self.ds.DoseGridScaling)
+
+        return dose * scaling
+
+
 
     def get_metadata(self) -> dict[str, str]:
         image = self._dicom_list[0]
