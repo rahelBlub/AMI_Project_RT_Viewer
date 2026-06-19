@@ -6,8 +6,10 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.widgets import Slider
 import matplotlib.image as mpimg
 
+from patient import Patient
 from src.helper.dict_to_list import dict_to_list
 from src.helper.ui_theme import *
+from src.dicom_handler import DicomHandler
 
 PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
@@ -16,21 +18,23 @@ class CTViewer:
     CMAP = "grey"
     INTERPOLATION = "nearest"
 
-    def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], metadata: dict, dose_volume=None, dose_alpha=0.4):
+    def __init__(self, patient: Patient):
         self.overview_img = mpimg.imread("./data/images/patient_planes.png")
-        self.metadata: dict[str, str] = metadata
-        self.volume = volume
-        self.dx, self.dy, self.dz = voxelspacing
 
-        self.dose_volume = dose_volume
-        self.dose_alpha = dose_alpha
+        self.pat = patient
+        d_handler = DicomHandler(patient)
+        self.metadata: dict[str, str] = d_handler.get_metadata()
+        self.volume = d_handler.create_ct_volume_with_HU()
+        self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
+
+        self.dose_volume = patient.get_rt_dose_path()
 
         self.window_center = 40
         self.window_width = 400
 
-        self.z_idx = volume.shape[0] // 2
-        self.y_idx = volume.shape[1] // 2
-        self.x_idx = volume.shape[2] // 2
+        self.z_idx = self.volume.shape[0] // 2
+        self.y_idx = self.volume.shape[1] // 2
+        self.x_idx = self.volume.shape[2] // 2
 
         self._create_figure()
         self._create_image_view()
@@ -48,20 +52,11 @@ class CTViewer:
         #     ax.set_xticks([])
         #     ax.set_yticks([])
 
-        # {
-        #     0 "PatientName": image.PatientName,
-        #     1 "PatientAge": image.PatientAge,
-        #     2 "PatientSex": image.PatientSex,
-        #     3 "BodyPartExamined": image.BodyPartExamined,
-        #     4 "SliceThickness": image.SliceThickness,
-        #     5 "PatientPosition": image.PatientPosition,
-        # }
+        # metadata_list = dict_to_list(self.metadata)
+        # # aus dem Alter '0' am Anfang und Buchstaben generell entfernen:
+        # metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
 
-        metadata_list = dict_to_list(self.metadata)
-        # aus dem Alter '0' am Anfang und Buchstaben generell entfernen:
-        metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
-
-        self.fig.canvas.manager.set_window_title(metadata_list[0] + " " + metadata_list[1] + " " + metadata_list[2])
+        self.fig.canvas.manager.set_window_title(self.pat.get_patient_name() + " " + metadata_list[1] + " " + metadata_list[2])
 
         self.fig.text(
             0.02,
@@ -147,6 +142,8 @@ class CTViewer:
             self.z_idx,
             "Axial",
         )
+        # if-Abfrage ob rt_dose vorhanden
+        # render_dose()
 
         self.img_coronal = self.create_image(
             self.ax_coronal,

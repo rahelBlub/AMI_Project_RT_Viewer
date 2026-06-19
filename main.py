@@ -26,13 +26,13 @@ if __name__ == "__main__":
     # print(patients)
     #
     # # Bekky: hab idx = 0 weil der existiert immer
-    study_uid = list(index[patients[1]].keys())[0]
-    ct_path = index[patients[1]][study_uid]["ct"]
+    study_uid = list(index[pat_list[1]].keys())[0]
+    #ct_path = index[pat_list[1]][study_uid]["ct"]
     #
     # #p7_uid = list(index[patients[6]].keys())[0]
     # #mr_path = index[patients[6]][p7_uid]["mr"]
     #
-    d_handler = DicomHandler(ct_path)
+    d_handler = DicomHandler(cur_pat)
     # #d_handler = DicomHandler(mr_path)
     # #print(d_handler.get_metadata())
     #
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     volume = d_handler.create_ct_volume_with_HU()
     voxelspacing = d_handler.get_voxelspacing()
     metadata = d_handler.get_metadata()
+
     #
     viewer = CTViewer(volume, voxelspacing, metadata)
     viewer.show()
