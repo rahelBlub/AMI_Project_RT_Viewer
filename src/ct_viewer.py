@@ -1,3 +1,5 @@
+import re
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import axes
@@ -13,8 +15,9 @@ class CTViewer:
     INTERPOLATION = "nearest"
     PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 
-    def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], dose_volume=None, dose_alpha=0.4):
+    def __init__(self, volume: np.ndarray[tuple[int, ...], np.dtype[...]], voxelspacing: tuple[float, float, float], metadata: dict, dose_volume=None, dose_alpha=0.4):
         self.overview_img = mpimg.imread("./data/images/patient_planes.png")
+        self.metadata: dict[str, str] = metadata
         self.volume = volume
         self.dx, self.dy, self.dz = voxelspacing
 
@@ -36,6 +39,34 @@ class CTViewer:
     def _create_figure(self):
         self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
 
+        # {
+        #     0 "PatientName": image.PatientName,
+        #     1 "PatientAge": image.PatientAge,
+        #     2 "PatientSex": image.PatientSex,
+        #     3 "BodyPartExamined": image.BodyPartExamined,
+        #     4 "SliceThickness": image.SliceThickness,
+        #     5 "PatientPosition": image.PatientPosition,
+        # }
+
+        metadata_list = dict_to_list(self.metadata)
+        # aus dem Alter '0' am Anfang und Buchstaben generell entfernen:
+        metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
+
+        self.fig.canvas.manager.set_window_title(metadata_list[0] + " " + metadata_list[1] + " " + metadata_list[2])
+
+        self.fig.text(
+            0.02,
+            0.925,
+            "Body Part: "
+            + metadata_list[3]
+            + "\nSlice Thickness: "
+            + metadata_list[4]
+            + "\nPatient Position: "
+            + metadata_list[5],
+            fontsize=12,
+            color='w'
+        )
+
         self.ax_axial = self.axs[0, 0]
         self.ax_sagittal = self.axs[0, 1]
         self.ax_coronal = self.axs[1, 1]
@@ -44,7 +75,7 @@ class CTViewer:
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
-        #plt.subplots_adjust(bottom=0.25)
+        # plt.subplots_adjust(bottom=0.25)
 
     # eine Funktion,die einmal das Bild mit Formatierung, Beschriftung und Metadaten implementiert
     def _create_image_view(self):
@@ -87,33 +118,42 @@ class CTViewer:
 
         img = axis.imshow(
             self.apply_window(
-                image,
+                self.volume[self.z_idx, :, :],
                 self.window_center,
                 self.window_width,
             ),
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
-            aspect=aspect,
+            aspect=self.dy / self.dx,
         )
+        self.ax_axial.set_title("Axial")
 
-        axis.set_title(title)
+        self.img_sagittal = self.ax_sagittal.imshow(
+            self.apply_window(self.volume[:, :, self.x_idx],
+                              self.window_center,
+                              self.window_width,
+                              ),
+            cmap=self.CMAP,
+            interpolation=self.INTERPOLATION,
+            aspect=self.dz / self.dy,
+        )
+        self.ax_sagittal.set_title("Sagittal")
 
-        return img
+        self.img_coronal = self.ax_coronal.imshow(
+            self.apply_window(self.volume[:, self.y_idx, :], self.window_center, self.window_width),
+            cmap=self.CMAP,
+            interpolation=self.INTERPOLATION,
+            aspect=self.dz / self.dx,
+        )
+        self.ax_coronal.set_title("Coronal")
 
-    def slider_below(self, ax, fig, height=0.02, offset=0.04):
-        bbox = ax.get_position()
-
-        return fig.add_axes([
-            bbox.x0,
-            bbox.y0 - offset,
-            bbox.width,
-            height
-        ])
+        self.img_overview = self.ax_overview.imshow(self.overview_img)
+        self.ax_overview.set_title("Overview")
 
     def _create_sliders(self):
-        #TODO: FRONTEND - Die Slider überlagern die Bilder
-        ax_slider_z = self.slider_below(self.ax_axial, self.fig)
 
+        #TODO: FRONTEND - Die Slider überlagern die Bilder
+        ax_slider_z = plt.axes((0.15, 0.15, 0.65, 0.03))
         self.slider_z = Slider(
             ax_slider_z,
             "Axial",
@@ -123,7 +163,7 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
+        ax_slider_y = plt.axes((0.15, 0.10, 0.65, 0.03))
         self.slider_y = Slider(
             ax_slider_y,
             "Coronal",
@@ -133,7 +173,7 @@ class CTViewer:
             valstep=1,
         )
 
-        ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
+        ax_slider_x = plt.axes((0.15, 0.05, 0.65, 0.03))
         self.slider_x = Slider(
             ax_slider_x,
             "Sagittal",

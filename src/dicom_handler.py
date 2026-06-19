@@ -85,7 +85,7 @@ class DicomHandler:
             return data.RTDOSE
         return 0.0
 
-    def get_metadata(self) -> dict[str, ...]:
+    def get_metadata(self) -> dict[str, str]:
         image = self._dicom_list[0]
 
         return {
