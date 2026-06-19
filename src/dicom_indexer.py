@@ -7,6 +7,10 @@ import json
 class DicomIndexer:
 
     def __init__(self, root):
+        #TODO: schauen ob Verzeichnis schon existiert,
+        # damit es nicht mehrfach komplett laufen muss
+        # mit hashing abfragen ob sich was geändert hat
+
         self.root = root
         self.index = defaultdict(lambda: defaultdict(dict))
 
@@ -28,20 +32,17 @@ class DicomIndexer:
 
                 entry = self.index[patient][study]
 
-                if modality == "CT":
-                    entry["ct"] = path
-
-                elif modality == "MR":
-                    entry["mr"] = path
-
-                elif modality == "RTSTRUCT":
-                    entry["rtstruct"] = full_path
-
-                elif modality == "RTDOSE":
-                    entry["dose"] = full_path
-
-                elif modality == "SEG":
-                    entry["seg"] = full_path
+                match modality:
+                    case "CT":
+                        entry["ct"] = path
+                    case "MR":
+                        entry["mr"] = path
+                    case "RTSTRUCT":
+                        entry["rtstruct"] = full_path
+                    case "RTDOSE":
+                        entry["dose"] = full_path
+                    case "SEG":
+                        entry["seg"] = full_path
 
         return self.index
 
