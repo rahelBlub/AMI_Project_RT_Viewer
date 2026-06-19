@@ -47,24 +47,24 @@ class CTViewer:
         #     5 "PatientPosition": image.PatientPosition,
         # }
 
-        #metadata_list = dict_to_list(self.metadata)
+        metadata_list = dict_to_list(self.metadata)
         # aus dem Alter '0' am Anfang und Buchstaben generell entfernen:
-        #metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
+        metadata_list[1] = re.sub(r'^0+|[A-Za-z]+$', '', metadata_list[1])
 
-        #self.fig.canvas.manager.set_window_title(metadata_list[0] + " " + metadata_list[1] + " " + metadata_list[2])
+        self.fig.canvas.manager.set_window_title(metadata_list[0] + " " + metadata_list[1] + " " + metadata_list[2])
 
-        #self.fig.text(
-        #    0.02,
-        #    0.925,
-        #    "Body Part: "
-        #    + metadata_list[3]
-        #    + "\nSlice Thickness: "
-        #    + metadata_list[4]
-        #    + "\nPatient Position: "
-        #    + metadata_list[5],
-        #    fontsize=12,
-        #    color='w'
-        #)
+        self.fig.text(
+            0.02,
+            0.925,
+            "Body Part: "
+            + metadata_list[3]
+            + "\nSlice Thickness: "
+            + metadata_list[4]
+            + "\nPatient Position: "
+            + metadata_list[5],
+            fontsize=12,
+            color='w'
+        )
 
         self.ax_axial = self.axs[0, 0]
         self.ax_sagittal = self.axs[0, 1]
@@ -167,6 +167,7 @@ class CTViewer:
             valinit=self.x_idx,
             valstep=1,
         )
+
 
         ax_wc = plt.axes((0.15, 0.20, 0.65, 0.03))
         self.slider_wc = Slider(
