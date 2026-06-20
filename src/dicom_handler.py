@@ -21,9 +21,8 @@ class DicomHandler:
             print("Found DICOM Files:")
             #print(self._dicom_list)
 
-        # TODO: rt_dose_path bisher hardgecodede print Ausgabe nur zum Debuggen
         self.dose_path = self._pat.get_rt_dose_path()
-        print(f"RT-Dose Path: {self.dose_path}")
+        #print(f"RT-Dose Path: {self.dose_path}")
         if self.dose_path:
             self.rt_dose = pydicom.dcmread(self.dose_path)
         else:
@@ -165,7 +164,17 @@ class DicomHandler:
         if image.__contains__("ImagePositionPatient"):
             self._pat.set_image_position_patient(image.ImagePositionPatient)
 
-    def get_patient_image_position_patient(self):
-        if self._pat.get_image_position_patient() is not None:
-            return self._pat.get_image_position_patient()
-        return None
+    def get_ct_image(self, ct_volume ,dx, dy, dz):
+        img = sitk.GetImageFromArray(ct_volume.astype(np.float32))
+        origin = self._pat.get_image_position_patient()
+        spacing = (dx, dy, dz)
+        # TODO: debug print Ausgaben löschen
+        print(f"Image Position Patient origin: {origin}")
+
+        if origin is None:
+                origin = (0, 0, 0)
+
+        img.SetSpacing(spacing)
+        img.SetOrigin(origin)
+        img.SetDirection((1, 0, 0, 0, 1, 0, 0, 0, 1))
+        return img
