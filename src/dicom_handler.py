@@ -10,19 +10,30 @@ class DicomHandler:
     def __init__(self, pat: Patient):
         self._pat = pat
 
-        #self.dcm_data_dir = self._pat.get_ct_path()
-        self.dcm_data_dir = self._pat.get_active_ct_path()
-        self._dicom_list = self._get_dcm_files()
+        self.dcm_ct_data_dir = self._pat.get_active_ct_path()
+        print(f"Active CT-Path: {self.dcm_ct_data_dir}")
 
-        if not self.dcm_data_dir:
+        if not self.dcm_ct_data_dir:
             raise ValueError("Patient has no CT path assigned (None)")
+
+        self._dicom_list = self._get_dcm_files()
+        if self._dicom_list:
+            print("Found DICOM Files:")
+            #print(self._dicom_list)
+
+        self.dose_path = self._pat.get_active_dose_path()
+        print(f"RT-Dose Path: {self.dose_path}")
+        if self.dose_path:
+            self.rt_dose = pydicom.dcmread(self.dose_path)
+        else:
+            self.rt_dose = None
 
         self.get_metadata_to_patient()
 
     def _get_dcm_files(self) -> list[FileDataset]:
         files = []
 
-        for root, _, filenames in os.walk(self.dcm_data_dir):
+        for root, _, filenames in os.walk(self.dcm_ct_data_dir):
             for f in filenames:
                 if not f.lower().endswith(".dcm"):
                     continue
@@ -96,25 +107,32 @@ class DicomHandler:
         return data.Modality
 
     def get_rt_dose_volume(self):
-        dose = self.ds.pixel_array.astype(np.float32)
+        if self.rt_dose is None:
+            return None
 
-        scaling = float(self.ds.DoseGridScaling)
+        dose = self.rt_dose.pixel_array.astype(np.float32)
+        scaling = float(self.rt_dose.DoseGridScaling)
 
         return dose * scaling
 
-    # TODO: keine Ahnung was hier passiert, aber das image stimmt noch nicht mit dem CT-Datensatz überien
     def get_dose_image(self):
-        dose = self.ds.pixel_array.astype(np.float32)
-        dose *= float(self.ds.DoseGridScaling)
+
+        if self.rt_dose is None:
+            return None
+
+        dose = self.get_rt_dose_volume()
 
         dose_img = sitk.GetImageFromArray(dose)
 
-        px, py = map(float, self.ds.PixelSpacing)
+        px, py = map(float, self.rt_dose.PixelSpacing)
+
         spacing = (px, py, 1.0)
 
-        dose_img.SetOrigin(self.ds.ImagePositionPatient)
+        dose_img.SetOrigin(
+            tuple(map(float, self.rt_dose.ImagePositionPatient))
+        )
+
         dose_img.SetSpacing(spacing)
-        dose_img.SetDirection((1, 0, 0, 0, 1, 0, 0, 0, 1))
 
         return dose_img
 

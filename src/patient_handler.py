@@ -11,6 +11,7 @@ class PatientHandler:
 
         self.check_json_file()
 
+
     def check_json_file(self):
         try:
             with open(self.json_file_dir, "r") as file:
@@ -26,25 +27,35 @@ class PatientHandler:
                         for ct in study_data.get("ct", []):
                             self.patient_obj.set_ct_data_available()
                             self.patient_obj.add_ct(ct)
+                            if ct:
+                                print("ct files found!")
+                            #print(self.patient_obj.get_ct_series())
 
                         for mr in study_data.get("mr", []):
                             self.patient_obj.set_mr_data_available()
                             self.patient_obj.add_mr(mr)
+                            #print(self.patient_obj.get_mr_series())
 
                         for rtstruct in study_data.get("rtstruct", []):
                             self.patient_obj.set_rt_struct_data_available()
                             self.patient_obj.add_rtstruct(rtstruct)
+                            #print(self.patient_obj.get_rt_struct_series())
 
                         for dose in study_data.get("dose", []):
                             self.patient_obj.set_rt_dose_data_available()
                             self.patient_obj.add_rtdose(dose)
+                            #print(self.patient_obj.get_rt_dose_series())
 
                         for plan in study_data.get("rtplan", []):
                             self.patient_obj.add_rtplan(plan)
+                            #print(self.patient_obj.get_rt_plan_sereies())
 
                         for seg in study_data.get("seg", []):
                             self.patient_obj.set_seg_data_available()
                             self.patient_obj.add_seg(seg)
+                            #print(self.patient_obj.get_segmantation_series())
+
+                        #self.patient_obj.resolve_relationships()
 
         except FileNotFoundError:
             print("JSON File not found!!!")

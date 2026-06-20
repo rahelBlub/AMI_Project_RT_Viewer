@@ -1,3 +1,4 @@
+import re
 import pydicom
 
 class Patient:
@@ -13,7 +14,8 @@ class Patient:
         self.segmentations = []
 
         self.mapped_sets = []
-        print(self.mapped_sets)
+
+        self.active_set = None
 
         self.active_ct_index = 0
         self.active_dose_index = 0
@@ -34,30 +36,71 @@ class Patient:
         self._has_rt_dose: bool = False
         self._has_seg: bool = False
 
-        self.resolve_relationships()
 
     def add_ct(self, ct):
         self.ct_series.append(ct)
 
+    # def add_ct(self, path, sop_uid, frame_uid):
+    #     self.ct_series.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #         "frame_uid": frame_uid,
+    #     })
+
     def add_mr(self, mr):
         self.mr_series.append(mr)
+
+    # def add_mr(self, path, sop_uid, frame_uid):
+    #     self.mr_series.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #         "frame_uid": frame_uid,
+    #     })
 
     def add_rtstruct(self, rtstruct):
         self.rtstructs.append(rtstruct)
 
+    # def add_rtstruct(self, path, sop_uid):
+    #     self.rtstructs.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #     })
+
     def add_rtdose(self, dose):
         self.rtdoses.append(dose)
+
+    # def add_rtdose(self, path, sop_uid):
+    #     self.rtdoses.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #     })
+
 
     def add_rtplan(self, plan):
         self.rtplans.append(plan)
 
+    # def add_rtplan(self, path, sop_uid):
+    #     self.rtplans.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #     })
+
     def add_seg(self, seg):
         self.segmentations.append(seg)
+
+    # def add_seg(self, path, sop_uid):
+    #     self.segmentations.append({
+    #         "path": path,
+    #         "sop_uid": sop_uid,
+    #     })
 
         # SETTER----------------------------------------------------
 
     def set_sop_instance_iud(self, in_iud):
         self._sop_instance_iud = in_iud
+
+    def set_active_set(self, idx: int):
+        self.active_set = self.mapped_sets[idx]
 
     def set_patient_age(self, age: str) -> None:
         if age != "":
@@ -123,6 +166,41 @@ class Patient:
         ct = self.get_active_ct()
         return ct["path"] if ct else None
 
+    # def get_active_ct_path(self):
+    #     if self.active_set:
+    #         return self.active_set["ct"]["path"]
+    #     return None
+
+    def get_active_dose_path(self):
+        if self.active_set:
+            return self.active_set["dose"]["path"]
+        return None
+
+    ### GETTER of Series -------------------------------------------------------------
+
+    def get_ct_series(self) :
+        return self.ct_series
+
+    def get_mr_series(self):
+        return self.mr_series
+
+    def get_rt_struct_series(self) :
+        return self.rtstructs
+
+    def get_rt_dose_series(self):
+        return self.rtdoses
+
+    def get_rt_plan_sereies(self):
+        return self.rtplans
+
+    def get_segmantation_series(self):
+        return self.segmentations
+
+    def get_mapped_sets(self):
+        return self.mapped_sets
+
+    ### GETTER for single variables
+
     def get_patient_name(self) -> str | None:
         return self._patient_name
 
@@ -174,75 +252,114 @@ class Patient:
     def get_image_position_patient(self):
         return self._image_position_patient
 
-
+# TODO: erstmal drauf scheißen
     def resolve_relationships(self):
-        """
-        Links RTDOSE → RTPLAN → RTSTRUCT → CT
-        based on DICOM UIDs (not filenames).
-        """
 
-        for dose in self.rtdoses:
+        self.mapped_sets = []
 
-            dose_ds = pydicom.dcmread(dose["path"], stop_before_pixels=True)
+        for ct in self.ct_series:
+            ct_ds = pydicom.dcmread(ct["path"], stop_before_pixels=True)
+            ct_frame = ct_ds.FrameOfReferenceUID
 
-            # -------------------------
-            # 1. RTPLAN finden
-            # -------------------------
-            plan_uid = None
-
-            if "ReferencedRTPlanSequence" in dose_ds:
-                plan_uid = dose_ds.ReferencedRTPlanSequence[0].ReferencedSOPInstanceUID
-
-            plan = next(
-                (p for p in self.rtplans if p["sop_uid"] == plan_uid),
-                None
-            )
-
-            if not plan:
-                continue
-
-            plan_ds = pydicom.dcmread(plan["path"], stop_before_pixels=True)
-
-            # -------------------------
-            # 2. RTSTRUCT finden
-            # -------------------------
-            struct_uid = None
-
-            if "ReferencedStructureSetSequence" in plan_ds:
-                struct_uid = plan_ds.ReferencedStructureSetSequence[0].ReferencedSOPInstanceUID
-
+            # RTSTRUCT direkt über FrameOfReferenceUID
             struct = next(
-                (s for s in self.rtstructs if s["sop_uid"] == struct_uid),
+                (s for s in self.rtstructs
+                 if ct_frame in pydicom.dcmread(s["path"], stop_before_pixels=True)
+                 .ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID),
                 None
             )
 
-            if not struct:
-                continue
+            # RTDOSE erstmal direkt nehmen (1:1 oder später matching)
+            dose = self.rtdoses[0] if self.rtdoses else None
 
-            struct_ds = pydicom.dcmread(struct["path"], stop_before_pixels=True)
-
-            # -------------------------
-            # 3. CT über FrameOfReferenceUID
-            # -------------------------
-            ref_frame = None
-
-            if "ReferencedFrameOfReferenceSequence" in struct_ds:
-                ref_frame = struct_ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
-
-            ct = None
-            for c in self.ct_series:
-                ct_ds = pydicom.dcmread(c["path"], stop_before_pixels=True)
-
-                if ct_ds.FrameOfReferenceUID == ref_frame:
-                    ct = c
-                    break
-
-            # -------------------------
-            # 4. Mapping speichern
-            # -------------------------
             self.mapped_sets.append({
-                "dose": dose,
-                "plan": plan,
+                "ct": ct,
                 "struct": struct,
-                "ct": ct
+                "dose": dose
             })
+
+    # def resolve_relationships(self):
+    #     """
+    #     Links RTDOSE → RTPLAN → RTSTRUCT → CT
+    #     based on DICOM UIDs (not filenames).
+    #     """
+    #
+    #     for dose in self.rtdoses:
+    #
+    #         dose_ds = pydicom.dcmread(dose["path"], stop_before_pixels=True)
+    #         # debugging prints
+    #         dose_path = dose["path"]
+    #         print(f"Dose-Path: {dose_path}")
+    #
+    #         # -------------------------
+    #         # 1. RTPLAN finden
+    #         # -------------------------
+    #         plan_uid = None
+    #
+    #         if "ReferencedRTPlanSequence" in dose_ds:
+    #             plan_uid = dose_ds.ReferencedRTPlanSequence[0].ReferencedSOPInstanceUID
+    #             print(f"Plan-UID: {plan_uid}")
+    #
+    #             print("RTPLANS:")
+    #             for p in self.rtplans:
+    #                 print(p)
+    #
+    #         plan = next(
+    #             (p for p in self.rtplans if p["sop_uid"] == plan_uid),
+    #             None
+    #         )
+    #
+    #         if not plan:
+    #             continue
+    #
+    #         plan_ds = pydicom.dcmread(plan["path"], stop_before_pixels=True)
+    #         # debugging prints
+    #         plan_path = dose["path"]
+    #         print(f"Plan-Path: {plan_path}")
+    #
+    #         # -------------------------
+    #         # 2. RTSTRUCT finden
+    #         # -------------------------
+    #         struct_uid = None
+    #
+    #         if "ReferencedStructureSetSequence" in plan_ds:
+    #             struct_uid = plan_ds.ReferencedStructureSetSequence[0].ReferencedSOPInstanceUID
+    #
+    #         struct = next(
+    #             (s for s in self.rtstructs if s["sop_uid"] == struct_uid),
+    #             None
+    #         )
+    #
+    #         if not struct:
+    #             continue
+    #
+    #         struct_ds = pydicom.dcmread(struct["path"], stop_before_pixels=True)
+    #         # debugging prints
+    #         struct_path = struct["path"]
+    #         print(f"Dose-Path: {struct_path}")
+    #
+    #         # -------------------------
+    #         # 3. CT über FrameOfReferenceUID
+    #         # -------------------------
+    #         ref_frame = None
+    #
+    #         if "ReferencedFrameOfReferenceSequence" in struct_ds:
+    #             ref_frame = struct_ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
+    #
+    #         ct = None
+    #         for c in self.ct_series:
+    #             ct_ds = pydicom.dcmread(c["path"], stop_before_pixels=True)
+    #
+    #             if ct_ds.FrameOfReferenceUID == ref_frame:
+    #                 ct = c
+    #                 break
+    #
+    #         # -------------------------
+    #         # 4. Mapping speichern
+    #         # -------------------------
+    #         self.mapped_sets.append({
+    #             "dose": dose,
+    #             "plan": plan,
+    #             "struct": struct,
+    #             "ct": ct
+    #         })

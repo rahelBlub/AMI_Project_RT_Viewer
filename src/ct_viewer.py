@@ -26,7 +26,8 @@ class CTViewer:
         # Bekky: ich hab das gefunden https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
         # resampling RT Dose
         ct_img = self.get_ct_image(d_handler.get_patient_image_position_patient())
-        #dose_img = d_handler.get_dose_image()
+        dose_img = d_handler.get_dose_image()
+        print(dose_img)
 
         # print("CT")
         # print("Size:", ct_img.GetSize())
