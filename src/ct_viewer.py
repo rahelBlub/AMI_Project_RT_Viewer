@@ -23,10 +23,17 @@ class CTViewer:
 
         self.ct_volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
-        self.dose_volume = None
 
-        self.ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
-        self.dose_img = d_handler.get_dose_image()
+        if self.pat.get_rt_dose_path():
+            self.ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
+            self.dose_img = d_handler.get_dose_image()
+
+            self.dose_volume = d_handler.get_rt_dose_volume()
+            self.resampled_dose_volume = self.resample_dose_volume()
+            print("dose_volume:", self.dose_volume.shape)
+            print(np.min(self.dose_volume), np.max(self.dose_volume))
+            print("resampled_dose_volume:", self.resampled_dose_volume.shape)
+            print(np.min(self.resampled_dose_volume), np.max(self.resampled_dose_volume))
 
         self.window_center = WINDOW_CENTER
         self.window_width = WINDOW_WIDTH
@@ -41,6 +48,10 @@ class CTViewer:
         self.dose_sagittal = None
         self.dose_colorbar = None
 
+    def resample_dose_volume(self):
+        dose_resampled = sitk.Resample(self.dose_img, self.ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
+                                       sitk.sitkFloat32)
+        return sitk.GetArrayFromImage(dose_resampled)
 
     def show_image_data(self):
 
@@ -50,6 +61,11 @@ class CTViewer:
         print("Origin:", self.ct_img.GetOrigin())
         print("Direction:", self.ct_img.GetDirection())
 
+        print(self.ct_img.TransformIndexToPhysicalPoint((0, 0, 0)))
+        print(self.ct_img.TransformIndexToPhysicalPoint(
+            tuple(s - 1 for s in self.ct_img.GetSize())
+        ))
+
         print()
 
         print("DOSE")
@@ -57,6 +73,11 @@ class CTViewer:
         print("Spacing:", self.dose_img.GetSpacing())
         print("Origin:", self.dose_img.GetOrigin())
         print("Direction:", self.dose_img.GetDirection())
+
+        print(self.dose_img.TransformIndexToPhysicalPoint((0, 0, 0)))
+        print(self.dose_img.TransformIndexToPhysicalPoint(
+            tuple(s - 1 for s in self.dose_img.GetSize())
+        ))
 
     def _create_figure(self):
         # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
@@ -103,17 +124,7 @@ class CTViewer:
         self.ax_coronal.axis("off")
         self.ax_overview.axis("off")
 
-
-    # # TODO: Resampling in Handler auslagern evtl.
-    # def resample_to_reference(self, moving, reference):
-    #     resampler = sitk.ResampleImageFilter()
-    #     resampler.SetReferenceImage(reference)
-    #     resampler.SetInterpolator(sitk.sitkLinear)
-    #     resampler.SetDefaultPixelValue(0)
-    #
-    #     return resampler.Execute(moving)
-
-    def _get_slice(self, view: str, idx: int):
+    def _get_ct_slice(self, view: str, idx: int):
         if view == "Axial":
             return self.ct_volume[idx, :, :], self.dy / self.dx
 
@@ -125,8 +136,20 @@ class CTViewer:
 
         raise ValueError("Unknown view")
 
+    def _get_dose_slice(self, view: str, idx: int):
+        if view == "Axial":
+            return self.resampled_dose_volume[idx, :, :], self.dy / self.dx
+
+        if view == "Coronal":
+            return self.resampled_dose_volume[:, idx, :], self.dz / self.dx
+
+        if view == "Sagittal":
+            return self.resampled_dose_volume[:, :, idx], self.dz / self.dy
+
+        raise ValueError("Unknown view")
+
     def create_image(self, axis, idx: int, view: str):
-        ct_slice, aspect = self._get_slice(view, idx)
+        ct_slice, aspect = self._get_ct_slice(view, idx)
 
         ct_slice = self.apply_window(
             ct_slice,
@@ -146,18 +169,11 @@ class CTViewer:
 
         return img
 
-    def resample_dose_volume(self):
-        # TODO eigene resample Methode oder sitk.Resample ? welche besser?
-        dose_resampled = sitk.Resample(self.dose_img, self.ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
-                                       sitk.sitkFloat32)
-        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
-        self.dose_volume = sitk.GetArrayFromImage(dose_resampled)
-        print("CT Volume:", self.ct_volume.shape)
-        print("DOSE Volume:", self.dose_volume.shape)
 
+    # TODO RT Dose passt irgendwie nicht
     def add_dose_image_to_view(self, axis, idx: int, view: str):
-        dose_slice, aspect = self._get_slice(view, idx)
-        self.resample_dose_volume()
+
+        dose_slice, aspect = self._get_dose_slice(view, idx)
 
         dose_slice = self.apply_window(
             dose_slice,
@@ -311,9 +327,28 @@ class CTViewer:
         )
 
         if self.dose_volume is not None:
-            self.dose_axial.set_data(self.dose_volume[z, :, :])
-            self.dose_sagittal.set_data(self.dose_volume[:, :, x])
-            self.dose_coronal.set_data(self.dose_volume[:, y, :])
+            # self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
+            # self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
+            # self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
+            #
+            # self.dose_axial.set_data(self.dose_volume[z, :, :])
+            # self.dose_sagittal.set_data(self.dose_volume[:, :, x])
+            # self.dose_coronal.set_data(self.dose_volume[:, y, :])
+            self.dose_axial.set_data(
+                self.apply_window(
+                    self.dose_volume[z, :, :], self.window_center, self.window_width
+                )
+            )
+            self.dose_sagittal.set_data(
+                self.apply_window(
+                    self.dose_volume[:, :, x], self.window_center, self.window_width
+                )
+            )
+            self.dose_coronal.set_data(
+                self.apply_window(
+                    self.dose_volume[:, y, :], self.window_center, self.window_width
+                )
+            )
 
         self.fig.canvas.draw_idle()
 
@@ -323,6 +358,8 @@ class CTViewer:
         self._create_image_view()
         self._create_sliders()
 
+        #plt.figure()
+        #plt.hist(self.dose_volume.flatten(), bins=100)
         plt.show()
 
     @staticmethod

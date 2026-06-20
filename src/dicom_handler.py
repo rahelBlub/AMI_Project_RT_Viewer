@@ -11,18 +11,19 @@ class DicomHandler:
         self._pat = pat
 
         self.dcm_ct_data_dir = self._pat.get_active_ct_path()
-        print(f"Active CT-Path: {self.dcm_ct_data_dir}")
 
         if not self.dcm_ct_data_dir:
             raise ValueError("Patient has no CT path assigned (None)")
+        else:
+            print(f"Active CT-Path: {self.dcm_ct_data_dir}")
 
         self._dicom_list = self._get_dcm_files()
         if self._dicom_list:
             print("Found DICOM Files:")
             #print(self._dicom_list)
 
+        # TODO
         self.dose_path = self._pat.get_rt_dose_path()
-        #print(f"RT-Dose Path: {self.dose_path}")
         if self.dose_path:
             self.rt_dose = pydicom.dcmread(self.dose_path)
         else:
@@ -106,7 +107,6 @@ class DicomHandler:
         """
         return data.Modality
 
-    # TODO
     def get_rt_dose_volume(self):
         if self.rt_dose is None:
             return None
@@ -116,7 +116,6 @@ class DicomHandler:
 
         return dose * scaling
 
-    # TODO
     def get_dose_image(self):
         if self.rt_dose is None:
             return None
@@ -133,6 +132,8 @@ class DicomHandler:
 
         dose_img.SetSpacing(spacing)
 
+        print("FrameOfReferenceUID from dose_image:", self.rt_dose.FrameOfReferenceUID)
+        print("ImagePositionPatient from dose_image:", self.rt_dose.ImagePositionPatient)
         return dose_img
 
     def get_metadata(self) -> dict[str, str]:
@@ -163,13 +164,16 @@ class DicomHandler:
 
         if image.__contains__("ImagePositionPatient"):
             self._pat.set_image_position_patient(image.ImagePositionPatient)
+        if image.__contains__("FrameOfReferenceUID"):
+            self._pat.set_frame_of_reference_uid(image.FrameOfReferenceUID)
 
     def get_ct_image(self, ct_volume ,dx, dy, dz):
         img = sitk.GetImageFromArray(ct_volume.astype(np.float32))
         origin = self._pat.get_image_position_patient()
         spacing = (dx, dy, dz)
         # TODO: debug print Ausgaben löschen
-        print(f"Image Position Patient origin: {origin}")
+        print("FrameOfReferenceUID  ct origin:", self._pat.get_frame_of_reference_uid())
+        print(f"ImagePositionPatient ct origin: {origin}")
 
         if origin is None:
                 origin = (0, 0, 0)

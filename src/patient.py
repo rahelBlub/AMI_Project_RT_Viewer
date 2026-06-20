@@ -3,7 +3,6 @@ import pydicom
 
 class Patient:
     def __init__(self, patient_id):
-        self.patient_id = patient_id # TODO: ID nicht Name sonder die uid
 
         self.ct_series = []
         self.mr_series = []
@@ -28,6 +27,8 @@ class Patient:
         self._slice_thickness: str | None = None
         self._patient_position: str | None = None
 
+        self._frame_reference_uid: str | None = None
+
         self._image_position_patient: str | None = None
 
         self._has_ct_studies: bool = False
@@ -42,64 +43,25 @@ class Patient:
         self._mr_path: str | None = None
         self._ct_path: str | None = None
 
-    ## SETTER for Sereies -----------------------------------------------------
+    ## SETTER for Series -----------------------------------------------------
 
     def add_ct(self, ct):
         self.ct_series.append(ct)
 
-    # def add_ct(self, path, sop_uid, frame_uid):
-    #     self.ct_series.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #         "frame_uid": frame_uid,
-    #     })
-
     def add_mr(self, mr):
         self.mr_series.append(mr)
-
-    # def add_mr(self, path, sop_uid, frame_uid):
-    #     self.mr_series.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #         "frame_uid": frame_uid,
-    #     })
 
     def add_rtstruct(self, rtstruct):
         self.rt_structs.append(rtstruct)
 
-    # def add_rtstruct(self, path, sop_uid):
-    #     self.rtstructs.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #     })
-
     def add_rtdose(self, dose):
         self.rt_doses.append(dose)
-
-    # def add_rtdose(self, path, sop_uid):
-    #     self.rtdoses.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #     })
-
 
     def add_rtplan(self, plan):
         self.rt_plans.append(plan)
 
-    # def add_rtplan(self, path, sop_uid):
-    #     self.rtplans.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #     })
-
     def add_seg(self, seg):
         self.segmentations.append(seg)
-
-    # def add_seg(self, path, sop_uid):
-    #     self.segmentations.append({
-    #         "path": path,
-    #         "sop_uid": sop_uid,
-    #     })
 
     # SETTER for Patient data----------------------------------------------------
 
@@ -131,6 +93,10 @@ class Patient:
 
     def set_image_position_patient(self, in_var):
         self._image_position_patient = in_var
+
+    def set_frame_of_reference_uid(self, uid: str) -> None:
+        if uid != "":
+            self._frame_reference_uid = uid
 
     ### SETTER for Paths --------------------------------------------------
 
@@ -179,11 +145,6 @@ class Patient:
         ct = self.get_active_ct()
         return ct["path"] if ct else None
 
-    # def get_active_ct_path(self):
-    #     if self.active_set:
-    #         return self.active_set["ct"]["path"]
-    #     return None
-
     def get_active_dose_path(self):
         if self.active_set:
             return self.active_set["dose"]["path"]
@@ -214,9 +175,6 @@ class Patient:
 
     ### GETTER for Patient variables -----------------------------------------------
 
-    def get_patient_id(self):
-        return self.patient_id
-
     def get_patient_name(self) -> str | None:
         return self._patient_name
 
@@ -234,6 +192,9 @@ class Patient:
 
     def get_patient_position(self) -> str | None:
         return self._patient_position
+
+    def get_frame_of_reference_uid(self):
+        return self._frame_reference_uid
 
     ### GETTER for Bool Variables ------------------------------------------------
 
