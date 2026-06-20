@@ -183,19 +183,34 @@ class CTViewer:
 
     # TODO: image und rt_dose separat! Wartung so schwierig
     def _create_image_view(self):
-        self.img_axial, self.dose_axial = self.create_image(
+        # self.img_axial, self.dose_axial = self.create_image(
+        #     self.ax_axial,
+        #     self.z_idx,
+        #     "Axial",
+        # )
+        self.img_axial = self.create_image(
             self.ax_axial,
             self.z_idx,
             "Axial",
         )
 
-        self.img_coronal, self.dose_coronal = self.create_image(
+        # self.img_coronal, self.dose_coronal = self.create_image(
+        #     self.ax_coronal,
+        #     self.y_idx,
+        #     "Coronal",
+        # )
+        self.img_coronal = self.create_image(
             self.ax_coronal,
             self.y_idx,
             "Coronal",
         )
 
-        self.img_sagittal, self.dose_sagittal = self.create_image(
+        # self.img_sagittal, self.dose_sagittal = self.create_image(
+        #     self.ax_sagittal,
+        #     self.x_idx,
+        #     "Sagittal",
+        # )
+        self.img_sagittal = self.create_image(
             self.ax_sagittal,
             self.x_idx,
             "Sagittal",
@@ -204,8 +219,8 @@ class CTViewer:
         self.img_overview = self.ax_overview.imshow(self.overview_img)
         self.ax_overview.set_title("Overview")
 
-        print("CT:", self.volume.shape)
-        print("DOSE:", self.dose_volume.shape)
+        #print("CT:", self.volume.shape)
+        #print("DOSE:", self.dose_volume.shape)
 
     # get image positions for slider orientation
     @staticmethod
