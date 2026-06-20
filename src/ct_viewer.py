@@ -18,17 +18,41 @@ class CTViewer:
 
         self.pat = patient
         d_handler = DicomHandler(patient)
-        self.volume = d_handler.create_ct_volume_with_HU()
+
+        self.ct_volume = d_handler.create_ct_volume_with_HU()
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
         self.dose_volume = None
 
-        # TODO: Resampling nochmal genauer anschauen
-        # Bekky: ich hab das gefunden https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
-        # resampling RT Dose
-        ct_img = self.get_ct_image(d_handler.get_patient_image_position_patient())
+        ct_img = self.get_ct_image()
         dose_img = d_handler.get_dose_image()
-        if dose_img:
-            print(f"Dose-Image: {dose_img}")
+        # if dose_img:
+        #     print(f"Dose-Image: {dose_img}")
+
+        self.show_image_data(ct_img, dose_img)
+
+        # TODO eigene resample Methode löschen
+        self.dose_resampled = sitk.Resample(
+            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
+        )
+        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
+        self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
+
+        # TODO: Volume vergleich, sollen beide gleich groß sein - print löschen wenn alles passt
+        print("CT Volume:", self.ct_volume.shape)
+        print("DOSE Volume:", self.dose_volume.shape)
+
+        self.window_center = 40
+        self.window_width = 400
+
+        self.z_idx = self.ct_volume.shape[0] // 2
+        self.y_idx = self.ct_volume.shape[1] // 2
+        self.x_idx = self.ct_volume.shape[2] // 2
+
+        self._create_figure()
+        self._create_image_view()
+        self._create_sliders()
+
+    def show_image_data(self, ct_img, dose_img):
 
         print("CT")
         print("Size:", ct_img.GetSize())
@@ -44,30 +68,10 @@ class CTViewer:
         print("Origin:", dose_img.GetOrigin())
         print("Direction:", dose_img.GetDirection())
 
-        # TODO
-        self.dose_resampled = sitk.Resample(
-            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
-        )
-        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
-        self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
-
-        self.window_center = 40
-        self.window_width = 400
-
-        self.z_idx = self.volume.shape[0] // 2
-        self.y_idx = self.volume.shape[1] // 2
-        self.x_idx = self.volume.shape[2] // 2
-
-        self._create_figure()
-        self._create_image_view()
-        self._create_sliders()
-
     def _create_figure(self):
         # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
         self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT), constrained_layout=True)
-        gs = self.fig.add_gridspec(
-            2, 1, height_ratios=[4, 1]
-        )  # seperate space for global slider
+        gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1])
         gs_top = gs[0].subgridspec(2, 2)
         gs_bottom = gs[1].subgridspec(2, 1)
 
@@ -110,13 +114,13 @@ class CTViewer:
 
     def _get_slice(self, view: str, idx: int):
         if view == "Axial":
-            return self.volume[idx, :, :], self.dy / self.dx
+            return self.ct_volume[idx, :, :], self.dy / self.dx
 
         if view == "Coronal":
-            return self.volume[:, idx, :], self.dz / self.dx
+            return self.ct_volume[:, idx, :], self.dz / self.dx
 
         if view == "Sagittal":
-            return self.volume[:, :, idx], self.dz / self.dy
+            return self.ct_volume[:, :, idx], self.dz / self.dy
 
         raise ValueError("Unknown view")
 
@@ -152,24 +156,20 @@ class CTViewer:
 
         return ct_img, dose_img
 
-    # TODO: die Patient ImagePositionPatient stimmt irgendwie nicht, Datentyp übeprüfen
-    # Bekky: hab ein paar Ergänzungen zur Typsicherheit im Setter gemacht, musst ggf auf
+    # TODO: Bekky: hab ein paar Ergänzungen zur Typsicherheit im Setter gemacht, musst ggf auf
     # None abfragen, falls die Daten nicht vorhanden sind
 
-    def get_ct_image(self, image_position_patient):
-        img = sitk.GetImageFromArray(self.volume.astype(np.float32))
-        # origin = self.pat.get_patient_position()
+    def get_ct_image(self):
+        img = sitk.GetImageFromArray(self.ct_volume.astype(np.float32))
+        origin = self.pat.get_image_position_patient()
         spacing = (self.dx, self.dy, self.dz)
+        # TODO: debug print Ausgaben löschen
+        print(f"Image Position Patient origin: {origin}")
 
-        # Übernahme origin aus image position pat von erstem ct
-        if image_position_patient is not None:
-            origin = tuple(float(v) for v in image_position_patient)
-        else:
-            # kp ob das sinnvoll ist aber was besseres fällt mir auch nicht ein
-            origin = (0, 0, 0)
+        if origin is None:
+                origin = (0, 0, 0)
 
         img.SetSpacing(spacing)
-        # img.SetOrigin((origin))
         img.SetOrigin(origin)
         img.SetDirection((1, 0, 0, 0, 1, 0, 0, 0, 1))
         return img
@@ -191,39 +191,21 @@ class CTViewer:
             self.z_idx,
             "Axial",
         )
-        # self.img_axial = self.create_image(
-        #     self.ax_axial,
-        #     self.z_idx,
-        #     "Axial",
-        # )
 
         self.img_coronal, self.dose_coronal = self.create_image(
             self.ax_coronal,
             self.y_idx,
             "Coronal",
         )
-        # self.img_coronal = self.create_image(
-        #     self.ax_coronal,
-        #     self.y_idx,
-        #     "Coronal",
-        # )
 
         self.img_sagittal, self.dose_sagittal = self.create_image(
             self.ax_sagittal,
             self.x_idx,
             "Sagittal",
         )
-        # self.img_sagittal = self.create_image(
-        #     self.ax_sagittal,
-        #     self.x_idx,
-        #     "Sagittal",
-        # )
 
         self.img_overview = self.ax_overview.imshow(self.overview_img)
         self.ax_overview.set_title("Overview")
-
-        #print("CT:", self.volume.shape)
-        #print("DOSE:", self.dose_volume.shape)
 
     # get image positions for slider orientation
     @staticmethod
@@ -238,7 +220,7 @@ class CTViewer:
             self.ax_slider_z,
             "A",
             0,
-            self.volume.shape[0] - 1,
+            self.ct_volume.shape[0] - 1,
             valinit=self.z_idx,
             valstep=1,
         )
@@ -247,7 +229,7 @@ class CTViewer:
             self.ax_slider_y,
             "C",
             0,
-            self.volume.shape[1] - 1,
+            self.ct_volume.shape[1] - 1,
             valinit=self.y_idx,
             valstep=1,
         )
@@ -256,7 +238,7 @@ class CTViewer:
             self.ax_slider_x,
             "S",
             0,
-            self.volume.shape[2] - 1,
+            self.ct_volume.shape[2] - 1,
             valinit=self.x_idx,
             valstep=1,
         )
@@ -294,17 +276,17 @@ class CTViewer:
 
         self.img_axial.set_data(
             self.apply_window(
-                self.volume[z, :, :], self.window_center, self.window_width
+                self.ct_volume[z, :, :], self.window_center, self.window_width
             )
         )
         self.img_sagittal.set_data(
             self.apply_window(
-                self.volume[:, :, x], self.window_center, self.window_width
+                self.ct_volume[:, :, x], self.window_center, self.window_width
             )
         )
         self.img_coronal.set_data(
             self.apply_window(
-                self.volume[:, y, :], self.window_center, self.window_width
+                self.ct_volume[:, y, :], self.window_center, self.window_width
             )
         )
 
