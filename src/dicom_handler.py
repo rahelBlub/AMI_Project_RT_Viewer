@@ -4,8 +4,7 @@ import pydicom
 from pydicom import FileDataset
 import SimpleITK as sitk
 
-#from src.patient import Patient
-from src.putzies import Patient
+from src.patient import Patient
 
 class DicomHandler:
     def __init__(self, pat: Patient):

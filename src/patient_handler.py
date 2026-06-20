@@ -1,6 +1,5 @@
 import ijson
-#from src.patient import Patient
-from src.putzies import Patient
+from src.patient import Patient
 
 
 class PatientHandler:
