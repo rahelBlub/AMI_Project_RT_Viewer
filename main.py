@@ -12,7 +12,11 @@ if __name__ == "__main__":
     pat_list = indexer.get_patient_list()
     print(pat_list)
 
-    pat_handler = PatientHandler(pat_list[3], indexer.get_json_file_dir())
+    selected_patient = indexer.select_patient(pat_list)
+
+    print(f"\nLade Patient: {selected_patient}")
+
+    pat_handler = PatientHandler(selected_patient, indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()
 
     #d_handler = DicomHandler(cur_pat)

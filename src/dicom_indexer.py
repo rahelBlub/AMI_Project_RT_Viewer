@@ -141,3 +141,23 @@ class DicomIndexer:
         except FileNotFoundError:
             print("JSON File not found!!!")
             return False
+
+    # TODO: Patientendaten am Anfang über Console auswählbar, passt hier eigentlich nicht rein aber wusste erstmal nicht wohin sonst
+    @staticmethod
+    def select_patient(patient_list: list[str]) -> str:
+        print("\nVerfügbare Patienten:\n")
+
+        for i, patient in enumerate(patient_list, start=1):
+            print(f"[{i}] {patient}")
+
+        while True:
+            try:
+                choice = int(input("\nPatient auswählen: "))
+
+                if 1 <= choice <= len(patient_list):
+                    return patient_list[choice - 1]
+
+                print("Ungültige Auswahl.")
+
+            except ValueError:
+                print("Bitte eine Zahl eingeben.")
