@@ -152,6 +152,8 @@ class CTViewer:
                 aspect=aspect,
             )
 
+        #TODO: Dosis Legende in Gy anzeigen
+        #TODO: isolinien hinzufügen
         axis.set_title(view)
 
         return ct_img, dose_img
