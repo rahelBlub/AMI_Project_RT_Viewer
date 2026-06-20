@@ -7,6 +7,8 @@ from src.helper.ui_theme import *
 from src.dicom_handler import DicomHandler
 
 PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
+WINDOW_CENTER = 40
+WINDOW_WIDTH = 400
 
 
 class CTViewer:
@@ -23,24 +25,11 @@ class CTViewer:
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
         self.dose_volume = None
 
-        ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
-        dose_img = d_handler.get_dose_image()
+        self.ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
+        self.dose_img = d_handler.get_dose_image()
 
-        self.show_image_data(ct_img, dose_img)
-
-        # TODO eigene resample Methode löschen
-        self.dose_resampled = sitk.Resample(
-            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
-        )
-        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
-        self.dose_volume = sitk.GetArrayFromImage(self.dose_resampled)
-
-        # TODO: Volume vergleich, sollen beide gleich groß sein - print löschen wenn alles passt
-        print("CT Volume:", self.ct_volume.shape)
-        print("DOSE Volume:", self.dose_volume.shape)
-
-        self.window_center = 40
-        self.window_width = 400
+        self.window_center = WINDOW_CENTER
+        self.window_width = WINDOW_WIDTH
 
         self.z_idx = self.ct_volume.shape[0] // 2
         self.y_idx = self.ct_volume.shape[1] // 2
@@ -53,21 +42,21 @@ class CTViewer:
         self.dose_colorbar = None
 
 
-    def show_image_data(self, ct_img, dose_img):
+    def show_image_data(self):
 
         print("CT")
-        print("Size:", ct_img.GetSize())
-        print("Spacing:", ct_img.GetSpacing())
-        print("Origin:", ct_img.GetOrigin())
-        print("Direction:", ct_img.GetDirection())
+        print("Size:", self.ct_img.GetSize())
+        print("Spacing:", self.ct_img.GetSpacing())
+        print("Origin:", self.ct_img.GetOrigin())
+        print("Direction:", self.ct_img.GetDirection())
 
         print()
 
         print("DOSE")
-        print("Size:", dose_img.GetSize())
-        print("Spacing:", dose_img.GetSpacing())
-        print("Origin:", dose_img.GetOrigin())
-        print("Direction:", dose_img.GetDirection())
+        print("Size:", self.dose_img.GetSize())
+        print("Spacing:", self.dose_img.GetSpacing())
+        print("Origin:", self.dose_img.GetOrigin())
+        print("Direction:", self.dose_img.GetDirection())
 
     def _create_figure(self):
         # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
@@ -108,21 +97,21 @@ class CTViewer:
             ax.set_yticks([])
             ax.set_frame_on(False)
 
+        # Achsenbeschriftung ausschalten
         self.ax_axial.axis("off")
         self.ax_sagittal.axis("off")
         self.ax_coronal.axis("off")
         self.ax_overview.axis("off")
 
 
-    # TODO: Resampling in Handler auslagern evtl.
-    def resample_to_reference(self, moving, reference):
-        resampler = sitk.ResampleImageFilter()
-
-        resampler.SetReferenceImage(reference)
-        resampler.SetInterpolator(sitk.sitkLinear)
-        resampler.SetDefaultPixelValue(0)
-
-        return resampler.Execute(moving)
+    # # TODO: Resampling in Handler auslagern evtl.
+    # def resample_to_reference(self, moving, reference):
+    #     resampler = sitk.ResampleImageFilter()
+    #     resampler.SetReferenceImage(reference)
+    #     resampler.SetInterpolator(sitk.sitkLinear)
+    #     resampler.SetDefaultPixelValue(0)
+    #
+    #     return resampler.Execute(moving)
 
     def _get_slice(self, view: str, idx: int):
         if view == "Axial":
@@ -145,60 +134,92 @@ class CTViewer:
             self.window_width,
         )
 
-        ct_img = axis.imshow(
+        img = axis.imshow(
             ct_slice,
             cmap=self.CMAP,
             interpolation=self.INTERPOLATION,
             aspect=aspect,
         )
 
-        if self.dose_volume is not None:
-            dose_slice, _ = self._get_slice(view, idx) # dose_slice = ct_clice ?
+        #TODO: isolinien hinzufügen
+        axis.set_title(view)
 
-            dose_img = axis.imshow(
-                dose_slice,
-                cmap="jet",
-                alpha=0.35,
-                vmin=0,
-                vmax=np.max(self.dose_volume),
-                aspect=aspect,
-            )
+        return img
 
-        #TODO: Dosis Legende in Gy anzeigen
-        if dose_img is not None:
+    def resample_dose_volume(self):
+        # TODO eigene resample Methode oder sitk.Resample ? welche besser?
+        dose_resampled = sitk.Resample(self.dose_img, self.ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
+                                       sitk.sitkFloat32)
+        # self.dose_resampled = self.resample_to_reference(dose_img, ct_img)
+        self.dose_volume = sitk.GetArrayFromImage(dose_resampled)
+        print("CT Volume:", self.ct_volume.shape)
+        print("DOSE Volume:", self.dose_volume.shape)
+
+    def add_dose_image_to_view(self, axis, idx: int, view: str):
+        dose_slice, aspect = self._get_slice(view, idx)
+        self.resample_dose_volume()
+
+        dose_slice = self.apply_window(
+            dose_slice,
+            self.window_center,
+            self.window_width,
+        )
+
+        img_dose = axis.imshow(
+            dose_slice,
+            cmap="jet",
+            alpha=0.35,
+            vmin=0,
+            vmax=np.max(self.dose_volume),
+            aspect=aspect,
+        )
+
+        # RT Dose Colorbar
+        if self.dose_img is not None:
             self.dose_colorbar = self.fig.colorbar(
-                dose_img,
-                ax=[
-                    self.ax_axial,
-                    self.ax_coronal,
-                    self.ax_sagittal,
-                ],
+                img_dose,
+                ax=[axis],
                 location="right",
                 shrink=0.85,
                 pad=0.02,
             )
-
             self.dose_colorbar.set_label("Dose [Gy]")
-        #TODO: isolinien hinzufügen
-        axis.set_title(view)
 
-        return ct_img, dose_img
+        return img_dose
 
-    # TODO: image und rt_dose separat! Wartung so schwierig
     def _create_image_view(self):
-        self.img_axial, self.dose_axial = self.create_image(
+        ## Image Axial
+        self.img_axial = self.create_image(
+            self.ax_axial,
+            self.z_idx,
+            "Axial",
+        )
+        # TODO: Abfrage ob RT Dose Vorhanden
+        self.dose_axial = self.add_dose_image_to_view(
             self.ax_axial,
             self.z_idx,
             "Axial",
         )
 
-        self.img_coronal, self.dose_coronal = self.create_image(
+        ## Image Coronal
+        self.img_coronal = self.create_image(
+            self.ax_coronal,
+            self.y_idx,
+            "Coronal",
+        )
+        self.dose_coronal = self.add_dose_image_to_view(
             self.ax_coronal,
             self.y_idx,
             "Coronal",
         )
 
-        self.img_sagittal, self.dose_sagittal = self.create_image(
+        ## Image Sagittal
+        self.img_sagittal = self.create_image(
+            self.ax_sagittal,
+            self.x_idx,
+            "Sagittal",
+        )
+        self.dose_sagittal = self.add_dose_image_to_view(
             self.ax_sagittal,
             self.x_idx,
             "Sagittal",
@@ -211,7 +232,6 @@ class CTViewer:
     @staticmethod
     def slider_below(ax, fig, height=0.02, offset=0.04):
         bbox = ax.get_position()
-
         return fig.add_axes([bbox.x0, bbox.y0 - offset, bbox.width, height])
 
     def _create_sliders(self):

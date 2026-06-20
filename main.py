@@ -27,6 +27,7 @@ if __name__ == "__main__":
 
     #d_handler = DicomHandler(cur_pat)
     viewer = CTViewer(cur_pat)
+    viewer.show_image_data()
     viewer.show()
 
     # mr_viewer = MRViewer()
