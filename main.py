@@ -19,8 +19,11 @@ if __name__ == "__main__":
     pat_handler = PatientHandler(selected_patient, indexer.get_json_file_dir())
     cur_pat = pat_handler.get_pat_obj()
     print(f"Patient Name: {cur_pat.get_patient_name()}")
+    print(f"Patient ID: {cur_pat.get_patient_id()}")
+    print(f"Patient RT-DOSE: {cur_pat.get_rt_dose_series()}")
+    print(f"RT-DOSE-Path: {cur_pat.get_rt_dose_path()}")
 
-    print(f"mapped set: {cur_pat.get_mapped_sets()}")
+    #print(f"mapped set: {cur_pat.get_mapped_sets()}")
 
     #d_handler = DicomHandler(cur_pat)
     viewer = CTViewer(cur_pat)

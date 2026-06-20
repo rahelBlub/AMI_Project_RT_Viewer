@@ -21,7 +21,8 @@ class DicomHandler:
             print("Found DICOM Files:")
             #print(self._dicom_list)
 
-        self.dose_path = self._pat.get_active_dose_path()
+        # TODO: rt_dose_path bisher hardgecodede print Ausgabe nur zum Debuggen
+        self.dose_path = self._pat.get_rt_dose_path()
         print(f"RT-Dose Path: {self.dose_path}")
         if self.dose_path:
             self.rt_dose = pydicom.dcmread(self.dose_path)

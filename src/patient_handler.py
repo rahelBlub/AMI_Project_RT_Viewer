@@ -44,6 +44,9 @@ class PatientHandler:
                         for dose in study_data.get("dose", []):
                             self.patient_obj.set_rt_dose_data_available()
                             self.patient_obj.add_rtdose(dose)
+                            # TODO: hardcode raus!
+                            print("dose file:", dose)
+                            self.patient_obj.set_rt_dose_path(dose["path"])
                             #print(self.patient_obj.get_rt_dose_series())
 
                         for plan in study_data.get("rtplan", []):

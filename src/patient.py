@@ -3,14 +3,14 @@ import pydicom
 
 class Patient:
     def __init__(self, patient_id):
-        self.patient_id = patient_id
+        self.patient_id = patient_id # TODO: ID nicht Name sonder die uid
 
         self.ct_series = []
         self.mr_series = []
 
-        self.rtstructs = []
-        self.rtdoses = []
-        self.rtplans = []
+        self.rt_structs = []
+        self.rt_doses = []
+        self.rt_plans = []
         self.segmentations = []
 
         self.mapped_sets = []
@@ -36,6 +36,13 @@ class Patient:
         self._has_rt_dose: bool = False
         self._has_seg: bool = False
 
+        self._seg_path: str | None = None
+        self._rt_dose_path: str | None = None
+        self._rt_struct_path: str | None = None
+        self._mr_path: str | None = None
+        self._ct_path: str | None = None
+
+    ## SETTER for Sereies -----------------------------------------------------
 
     def add_ct(self, ct):
         self.ct_series.append(ct)
@@ -58,7 +65,7 @@ class Patient:
     #     })
 
     def add_rtstruct(self, rtstruct):
-        self.rtstructs.append(rtstruct)
+        self.rt_structs.append(rtstruct)
 
     # def add_rtstruct(self, path, sop_uid):
     #     self.rtstructs.append({
@@ -67,7 +74,7 @@ class Patient:
     #     })
 
     def add_rtdose(self, dose):
-        self.rtdoses.append(dose)
+        self.rt_doses.append(dose)
 
     # def add_rtdose(self, path, sop_uid):
     #     self.rtdoses.append({
@@ -77,7 +84,7 @@ class Patient:
 
 
     def add_rtplan(self, plan):
-        self.rtplans.append(plan)
+        self.rt_plans.append(plan)
 
     # def add_rtplan(self, path, sop_uid):
     #     self.rtplans.append({
@@ -94,7 +101,7 @@ class Patient:
     #         "sop_uid": sop_uid,
     #     })
 
-        # SETTER----------------------------------------------------
+    # SETTER for Patient data----------------------------------------------------
 
     def set_sop_instance_iud(self, in_iud):
         self._sop_instance_iud = in_iud
@@ -122,20 +129,10 @@ class Patient:
         if position != "":
             self._patient_position = position
 
-    def set_ct_data_available(self) -> None:
-        self._has_ct_studies = True
+    def set_image_position_patient(self, in_var):
+        self._image_position_patient = in_var
 
-    def set_mr_data_available(self) -> None:
-        self._has_mr_studies = True
-
-    def set_rt_struct_data_available(self) -> None:
-        self._has_rt_struct = True
-
-    def set_rt_dose_data_available(self) -> None:
-        self._has_rt_dose = True
-
-    def set_seg_data_available(self) -> None:
-        self._has_seg = True
+    ### SETTER for Paths --------------------------------------------------
 
     def set_ct_path(self, in_path) -> None:
         self._ct_path = in_path
@@ -152,10 +149,26 @@ class Patient:
     def set_seg_path(self, in_path) -> None:
         self._seg_path = in_path
 
-    def set_image_position_patient(self, in_var):
-        self._image_position_patient = in_var
 
-        # GETTER----------------------------------------------------
+   ### SETTER for Bool -----------------------------------------------------
+
+    def set_ct_data_available(self) -> None:
+        self._has_ct_studies = True
+
+    def set_mr_data_available(self) -> None:
+        self._has_mr_studies = True
+
+    def set_rt_struct_data_available(self) -> None:
+        self._has_rt_struct = True
+
+    def set_rt_dose_data_available(self) -> None:
+        self._has_rt_dose = True
+
+    def set_seg_data_available(self) -> None:
+        self._has_seg = True
+
+
+    # GETTER----------------------------------------------------
 
     def get_active_ct(self):
         if not self.ct_series:
@@ -185,21 +198,24 @@ class Patient:
         return self.mr_series
 
     def get_rt_struct_series(self) :
-        return self.rtstructs
+        return self.rt_structs
 
     def get_rt_dose_series(self):
-        return self.rtdoses
+        return self.rt_doses
 
-    def get_rt_plan_sereies(self):
-        return self.rtplans
+    def get_rt_plan_series(self):
+        return self.rt_plans
 
-    def get_segmantation_series(self):
+    def get_segmentation_series(self):
         return self.segmentations
 
     def get_mapped_sets(self):
         return self.mapped_sets
 
-    ### GETTER for single variables
+    ### GETTER for Patient variables -----------------------------------------------
+
+    def get_patient_id(self):
+        return self.patient_id
 
     def get_patient_name(self) -> str | None:
         return self._patient_name
@@ -219,6 +235,8 @@ class Patient:
     def get_patient_position(self) -> str | None:
         return self._patient_position
 
+    ### GETTER for Bool Variables ------------------------------------------------
+
     def has_ct_data_available(self) -> bool:
         return self._has_ct_studies
 
@@ -233,6 +251,8 @@ class Patient:
 
     def has_seg_available(self) -> bool:
         return self._has_seg
+
+    ### GETTER for Dataset Paths -------------------------------------------------
 
     def get_ct_path(self) -> str | None:
         return self._ct_path
@@ -252,7 +272,7 @@ class Patient:
     def get_image_position_patient(self):
         return self._image_position_patient
 
-# TODO: erstmal drauf scheißen
+# TODO: relationships funktionieren nicht, -> hardcoden der Pfade
     def resolve_relationships(self):
 
         self.mapped_sets = []
@@ -263,14 +283,14 @@ class Patient:
 
             # RTSTRUCT direkt über FrameOfReferenceUID
             struct = next(
-                (s for s in self.rtstructs
+                (s for s in self.rt_structs
                  if ct_frame in pydicom.dcmread(s["path"], stop_before_pixels=True)
                  .ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID),
                 None
             )
 
             # RTDOSE erstmal direkt nehmen (1:1 oder später matching)
-            dose = self.rtdoses[0] if self.rtdoses else None
+            dose = self.rt_doses[0] if self.rt_doses else None
 
             self.mapped_sets.append({
                 "ct": ct,

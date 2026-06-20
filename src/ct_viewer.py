@@ -22,26 +22,26 @@ class CTViewer:
         self.dx, self.dy, self.dz = d_handler.get_voxelspacing()
         self.dose_volume = None
 
-        # TODO: Resampling-kacke nochmal genauer anschauen checke es gerade nicht
+        # TODO: Resampling nochmal genauer anschauen
         # Bekky: ich hab das gefunden https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
         # resampling RT Dose
         ct_img = self.get_ct_image(d_handler.get_patient_image_position_patient())
         dose_img = d_handler.get_dose_image()
         print(dose_img)
 
-        # print("CT")
-        # print("Size:", ct_img.GetSize())
-        # print("Spacing:", ct_img.GetSpacing())
-        # print("Origin:", ct_img.GetOrigin())
-        # print("Direction:", ct_img.GetDirection())
-        #
-        # print()
-        #
-        # print("DOSE")
-        # print("Size:", dose_img.GetSize())
-        # print("Spacing:", dose_img.GetSpacing())
-        # print("Origin:", dose_img.GetOrigin())
-        # print("Direction:", dose_img.GetDirection())
+        print("CT")
+        print("Size:", ct_img.GetSize())
+        print("Spacing:", ct_img.GetSpacing())
+        print("Origin:", ct_img.GetOrigin())
+        print("Direction:", ct_img.GetDirection())
+
+        print()
+
+        print("DOSE")
+        print("Size:", dose_img.GetSize())
+        print("Spacing:", dose_img.GetSpacing())
+        print("Origin:", dose_img.GetOrigin())
+        print("Direction:", dose_img.GetDirection())
 
         # self.dose_resampled = sitk.Resample(
         #     dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
