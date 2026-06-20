@@ -107,6 +107,7 @@ class DicomHandler:
         """
         return data.Modality
 
+    # TODO
     def get_rt_dose_volume(self):
         if self.rt_dose is None:
             return None
@@ -116,17 +117,15 @@ class DicomHandler:
 
         return dose * scaling
 
+    # TODO
     def get_dose_image(self):
-
         if self.rt_dose is None:
             return None
 
         dose = self.get_rt_dose_volume()
-
         dose_img = sitk.GetImageFromArray(dose)
 
         px, py = map(float, self.rt_dose.PixelSpacing)
-
         spacing = (px, py, 1.0)
 
         dose_img.SetOrigin(
