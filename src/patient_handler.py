@@ -43,8 +43,6 @@ class PatientHandler:
                         for dose in study_data.get("dose", []):
                             self.patient_obj.set_rt_dose_data_available()
                             self.patient_obj.add_rtdose(dose)
-                            # TODO: hardcode raus!
-                            #self.patient_obj.set_rt_dose_path(dose["path"])
                             #print(self.patient_obj.get_rt_dose_series())
 
                         for plan in study_data.get("rtplan", []):
@@ -74,6 +72,11 @@ class PatientHandler:
 
                     if 1 <= choice <= len(ct_set):
                         self.patient_obj.set_active_set(choice-1)
+
+                        # TODO Abfrage ob vorhanden und wenn > 1 auch mit auswahl
+                        rt_dose_list = self.patient_obj.get_rt_dose_series()
+                        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+
                         return ct_set[choice - 1]["path"]
 
                     print("Ungültige Auswahl.")
@@ -81,8 +84,7 @@ class PatientHandler:
                 except ValueError:
                     print("Bitte eine Zahl eingeben.")
 
-        rt_dose_list = self.patient_obj.get_rt_dose_series()
-        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+
 
     def get_pat_obj(self):
         return self.patient_obj

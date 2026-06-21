@@ -81,7 +81,7 @@ class Patient:
         self._sop_instance_iud = in_iud
 
     def set_active_set(self, idx: int):
-        self.active_set = self.mapped_sets[idx]
+        self.active_set = idx #self.mapped_sets[idx]
 
     def set_patient_age(self, age: str) -> None:
         if age != "":
