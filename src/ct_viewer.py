@@ -55,6 +55,10 @@ class CTViewer:
         self.dose_sagittal = None
         self.dose_colorbar = None
 
+        self.iso_axial = None
+        self.iso_sagittal = None
+        self.iso_coronal = None
+
     def show_image_data(self):
 
         print("CT")
@@ -166,13 +170,11 @@ class CTViewer:
             aspect=aspect,
         )
 
-        #TODO: isolinien hinzufügen
         axis.set_title(view)
 
         return img
 
 
-    # TODO RT Dose passt irgendwie nicht
     def add_dose_image_to_view(self, axis, idx: int, view: str):
         threshold = 5.0 #Gy
 
@@ -207,6 +209,34 @@ class CTViewer:
 
         return img_dose
 
+    def add_dose_iso_to_view(self, axis, idx: int, view: str):
+        dose_slice, aspect = self._get_dose_slice(view, idx)
+
+        dose_slice = self.apply_window(
+            dose_slice,
+            self.window_center,
+            self.window_width,
+        )
+
+        isoline = axis.contour(
+            dose_slice,
+            levels=[
+                0.1 * np.max(dose_slice),
+                0.2 * np.max(dose_slice),
+                0.5 * np.max(dose_slice),
+                0.8 * np.max(dose_slice),
+            ],
+            colors=[
+                "blue",
+                "green",
+                "yellow",
+                "red",
+                ],
+            linewidths=0.5,
+        )
+
+        return isoline
+
     def _create_image_view(self):
         ## Image Axial
         self.img_axial = self.create_image(
@@ -216,6 +246,11 @@ class CTViewer:
         )
         # TODO: Abfrage ob RT Dose Vorhanden
         self.dose_axial = self.add_dose_image_to_view(
+            self.ax_axial,
+            self.z_idx,
+            "Axial",
+        )
+        self.iso_axial = self.add_dose_iso_to_view(
             self.ax_axial,
             self.z_idx,
             "Axial",
@@ -232,6 +267,11 @@ class CTViewer:
             self.y_idx,
             "Coronal",
         )
+        self.iso_coronal = self.add_dose_iso_to_view(
+            self.ax_coronal,
+            self.y_idx,
+            "Coronal",
+        )
 
         ## Image Sagittal
         self.img_sagittal = self.create_image(
@@ -240,6 +280,11 @@ class CTViewer:
             "Sagittal",
         )
         self.dose_sagittal = self.add_dose_image_to_view(
+            self.ax_sagittal,
+            self.x_idx,
+            "Sagittal",
+        )
+        self.iso_sagittal = self.add_dose_iso_to_view(
             self.ax_sagittal,
             self.x_idx,
             "Sagittal",
@@ -334,25 +379,19 @@ class CTViewer:
             self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
             self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
             self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
-            #
-            # self.dose_axial.set_data(self.dose_volume[z, :, :])
-            # self.dose_sagittal.set_data(self.dose_volume[:, :, x])
-            # self.dose_coronal.set_data(self.dose_volume[:, y, :])
-            # self.dose_axial.set_data(
-            #     self.apply_window(
-            #         self.resampled_dose_volume[z, :, :], self.window_center, self.window_width
-            #     )
-            # )
-            # self.dose_sagittal.set_data(
-            #     self.apply_window(
-            #         self.resampled_dose_volume[:, :, x], self.window_center, self.window_width
-            #     )
-            # )
-            # self.dose_coronal.set_data(
-            #     self.apply_window(
-            #         self.resampled_dose_volume[:, y, :], self.window_center, self.window_width
-            #     )
-            # )
+
+            # TODO Update der Isolinien
+            if self.iso_axial:
+                for coll in self.iso_axial.collections:
+                    coll.remove()
+
+                self.iso_axial = self.add_dose_iso_to_view(
+                    self.ax_axial,
+                    self.z_idx,
+                    "Axial",
+                )
+            # Create animation
+            #anim = FuncAnimation(fig, update, frames=100, interval=60, blit=False)
 
         self.fig.canvas.draw_idle()
 
