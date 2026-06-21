@@ -27,9 +27,16 @@ class CTViewer:
         if self.pat.get_rt_dose_path():
             self.ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
             self.dose_img = d_handler.get_dose_image()
-
+            #self.dose_img = d_handler.get_sitk_dose_image()
             self.dose_volume = d_handler.get_rt_dose_volume()
-            self.resampled_dose_volume = self.resample_dose_volume()
+            self.resampled_dose_volume = d_handler.resample_dose_volume(self.dose_img, self.ct_img)
+
+            # test des von sitk generierten image
+            #dose_sitk = sitk.GetArrayFromImage(self.dose_volume)
+            dose_sitk = self.resampled_dose_volume
+            print("sitk_image min, max: ", dose_sitk.min(), dose_sitk.max())
+
+            #self.resampled_dose_volume = self.dose_img.CopyInformation(self.ct_img)
             print("dose_volume:", self.dose_volume.shape)
             print(np.min(self.dose_volume), np.max(self.dose_volume))
             print("resampled_dose_volume:", self.resampled_dose_volume.shape)
@@ -48,11 +55,6 @@ class CTViewer:
         self.dose_sagittal = None
         self.dose_colorbar = None
 
-    def resample_dose_volume(self):
-        dose_resampled = sitk.Resample(self.dose_img, self.ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
-                                       sitk.sitkFloat32)
-        return sitk.GetArrayFromImage(dose_resampled)
-
     def show_image_data(self):
 
         print("CT")
@@ -60,7 +62,7 @@ class CTViewer:
         print("Spacing:", self.ct_img.GetSpacing())
         print("Origin:", self.ct_img.GetOrigin())
         print("Direction:", self.ct_img.GetDirection())
-
+        print("TransformIndexToPhysikalPoint:")
         print(self.ct_img.TransformIndexToPhysicalPoint((0, 0, 0)))
         print(self.ct_img.TransformIndexToPhysicalPoint(
             tuple(s - 1 for s in self.ct_img.GetSize())
@@ -73,7 +75,7 @@ class CTViewer:
         print("Spacing:", self.dose_img.GetSpacing())
         print("Origin:", self.dose_img.GetOrigin())
         print("Direction:", self.dose_img.GetDirection())
-
+        print("TransformIndexToPhysikalPoint:")
         print(self.dose_img.TransformIndexToPhysicalPoint((0, 0, 0)))
         print(self.dose_img.TransformIndexToPhysicalPoint(
             tuple(s - 1 for s in self.dose_img.GetSize())
@@ -172,8 +174,10 @@ class CTViewer:
 
     # TODO RT Dose passt irgendwie nicht
     def add_dose_image_to_view(self, axis, idx: int, view: str):
+        threshold = 5.0 #Gy
 
         dose_slice, aspect = self._get_dose_slice(view, idx)
+        #dose_slice[dose_slice < threshold] = np.nan # NaN ausblenden
 
         dose_slice = self.apply_window(
             dose_slice,
@@ -184,9 +188,9 @@ class CTViewer:
         img_dose = axis.imshow(
             dose_slice,
             cmap="jet",
-            alpha=0.35,
-            vmin=0,
-            vmax=np.max(self.dose_volume),
+            alpha=0.6,
+            vmin=threshold,
+            vmax=np.max(self.resampled_dose_volume),
             aspect=aspect,
         )
 
@@ -327,28 +331,28 @@ class CTViewer:
         )
 
         if self.dose_volume is not None:
-            # self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
-            # self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
-            # self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
+            self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
+            self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
+            self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
             #
             # self.dose_axial.set_data(self.dose_volume[z, :, :])
             # self.dose_sagittal.set_data(self.dose_volume[:, :, x])
             # self.dose_coronal.set_data(self.dose_volume[:, y, :])
-            self.dose_axial.set_data(
-                self.apply_window(
-                    self.dose_volume[z, :, :], self.window_center, self.window_width
-                )
-            )
-            self.dose_sagittal.set_data(
-                self.apply_window(
-                    self.dose_volume[:, :, x], self.window_center, self.window_width
-                )
-            )
-            self.dose_coronal.set_data(
-                self.apply_window(
-                    self.dose_volume[:, y, :], self.window_center, self.window_width
-                )
-            )
+            # self.dose_axial.set_data(
+            #     self.apply_window(
+            #         self.resampled_dose_volume[z, :, :], self.window_center, self.window_width
+            #     )
+            # )
+            # self.dose_sagittal.set_data(
+            #     self.apply_window(
+            #         self.resampled_dose_volume[:, :, x], self.window_center, self.window_width
+            #     )
+            # )
+            # self.dose_coronal.set_data(
+            #     self.apply_window(
+            #         self.resampled_dose_volume[:, y, :], self.window_center, self.window_width
+            #     )
+            # )
 
         self.fig.canvas.draw_idle()
 

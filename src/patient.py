@@ -245,7 +245,7 @@ class Patient:
     def get_image_position_patient(self):
         return self._image_position_patient
 
-# TODO: relationships funktionieren nicht, -> hardcoden der Pfade
+# TODO: relationships funktionieren nicht, evtl. komplett weglassen
     def resolve_relationships(self):
 
         self.mapped_sets = []

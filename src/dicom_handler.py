@@ -18,14 +18,13 @@ class DicomHandler:
             print(f"Active CT-Path: {self.dcm_ct_data_dir}")
 
         self._dicom_list = self._get_dcm_files()
-        if self._dicom_list:
-            print("Found DICOM Files:")
-            #print(self._dicom_list)
+        #print(self._dicom_list)
 
-        # TODO
+        # TODO rt_dose als dicom file einlesen oder als image über sitk ?
         self.dose_path = self._pat.get_rt_dose_path()
         if self.dose_path:
             self.rt_dose = pydicom.dcmread(self.dose_path)
+            self.rt_dose_image = sitk.ReadImage(self.dose_path)
         else:
             self.rt_dose = None
 
@@ -107,6 +106,29 @@ class DicomHandler:
         """
         return data.Modality
 
+    ## RT Dose Volume Handling ------------------------------------
+
+    def resample_dose_volume(self, dose_img, ct_img):
+        dose_resampled = sitk.Resample(dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
+                                       sitk.sitkFloat32)
+        print()
+        print("DOSE resampled")
+        print("Size:", dose_resampled.GetSize())
+        print("Spacing:", dose_resampled.GetSpacing())
+        print("Origin:", dose_resampled.GetOrigin())
+        print("Direction:", dose_resampled.GetDirection())
+        print("TransformIndexToPhysikalPoint:")
+        print(dose_resampled.TransformIndexToPhysicalPoint((0, 0, 0)))
+        print(dose_resampled.TransformIndexToPhysicalPoint(
+            tuple(s - 1 for s in dose_img.GetSize())
+        ))
+        print()
+
+        # resampled_dose = sitk.GetArrayFromImage(dose_resampled)
+        # resampled_dose *= float(self.rt_dose.DoseGridScaling)
+        # return resampled_dose
+        return sitk.GetArrayFromImage(dose_resampled)
+
     def get_rt_dose_volume(self):
         if self.rt_dose is None:
             return None
@@ -116,6 +138,9 @@ class DicomHandler:
 
         return dose * scaling
 
+    def get_sitk_dose_image(self):
+        return self.rt_dose_image
+
     def get_dose_image(self):
         if self.rt_dose is None:
             return None
@@ -123,17 +148,23 @@ class DicomHandler:
         dose = self.get_rt_dose_volume()
         dose_img = sitk.GetImageFromArray(dose)
 
+        # TODO pz hardgecoded hingepfuscht, aber funktioniert halbwegs
         px, py = map(float, self.rt_dose.PixelSpacing)
-        spacing = (px, py, 1.0)
+        pz = 4.0
+        # z_pos = self.rt_dose.GridFrameOffsetVector
+        # pz = z_pos[1] - z_pos[0]
+        # offsets = np.array(self.rt_dose.GridFrameOffsetVector, dtype=np.float32)
+        # pz = np.mean(np.diff(offsets))
+        spacing = (px, py, pz)
 
-        dose_img.SetOrigin(
-            tuple(map(float, self.rt_dose.ImagePositionPatient))
-        )
-
+        dose_img.SetOrigin(tuple(map(float, self.rt_dose.ImagePositionPatient)))
         dose_img.SetSpacing(spacing)
+        dose_img.SetDirection((1,0,0,0,1,0,0,0,1)) # -> direction aus CT Refernz übernehmen!
 
-        print("FrameOfReferenceUID from dose_image:", self.rt_dose.FrameOfReferenceUID)
-        print("ImagePositionPatient from dose_image:", self.rt_dose.ImagePositionPatient)
+        print("FrameOfReferenceUID from rt_dose:", self.rt_dose.FrameOfReferenceUID)
+        print("ImagePositionPatient from rt_dose:", self.rt_dose.ImagePositionPatient)
+        print("GridOffSetVector:", self.rt_dose.GridFrameOffsetVector[:5])
+        print(self.rt_dose.GridFrameOffsetVector[-5:])
         return dose_img
 
     def get_metadata(self) -> dict[str, str]:

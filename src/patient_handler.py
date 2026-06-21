@@ -57,7 +57,6 @@ class PatientHandler:
         except FileNotFoundError:
             print("JSON File not found!!!")
 
-    # TODO ct_series von list zu dict ändern für abfrage
     def choose_active_set(self):
         if self.patient_obj.get_ct_series():
             print("\nVerfügbare CT-Sets:\n")
@@ -83,6 +82,36 @@ class PatientHandler:
 
                 except ValueError:
                     print("Bitte eine Zahl eingeben.")
+
+        elif self.patient_obj.get_mr_series():
+            print("\nVerfügbare MR-Sets:\n")
+
+            mr_set = self.patient_obj.get_mr_series()
+            for i, mr in enumerate(mr_set, start=1):
+                print(f"[{i}] {mr['description']}")
+
+            while True:
+                try:
+                    choice = int(input("\nMR-Set auswählen: "))
+
+                    if 1 <= choice <= len(mr_set):
+                        self.patient_obj.set_active_set(choice - 1)
+
+                        # TODO Abfrage ob vorhanden und wenn > 1 auch mit auswahl
+                        rt_dose_list = self.patient_obj.get_rt_dose_series()
+                        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+
+                        return mr_set[choice - 1]["path"]
+
+                    print("Ungültige Auswahl.")
+
+                except ValueError:
+                    print("Bitte eine Zahl eingeben.")
+
+        else:
+            print("invalid Patient!")
+            print("Patient has no CT or MR Set")
+            return None
 
 
 
