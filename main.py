@@ -22,8 +22,10 @@ if __name__ == "__main__":
     print(f"Patient RT-DOSE: {cur_pat.get_rt_dose_series()}")
     print(f"RT-DOSE-Path: {cur_pat.get_rt_dose_path()}")
 
-    viewer = CTViewer(cur_pat)
-    viewer.show_image_data()
-    viewer.show()
-
-    # mr_viewer = MRViewer()
+    if cur_pat.get_ct_series():
+        ct_viewer = CTViewer(cur_pat)
+        ct_viewer.show_image_data()
+        ct_viewer.show()
+    else:
+        raise ValueError("Patient has no CT-series!")
+        # mr_viewer = MRViewer(cur_pat)

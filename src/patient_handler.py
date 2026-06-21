@@ -10,6 +10,7 @@ class PatientHandler:
         self.patient_obj = Patient(patient_name)
 
         self.check_json_file()
+        self.choose_active_set()
 
 
     def check_json_file(self):
@@ -27,8 +28,6 @@ class PatientHandler:
                         for ct in study_data.get("ct", []):
                             self.patient_obj.set_ct_data_available()
                             self.patient_obj.add_ct(ct)
-                            if ct:
-                                print("ct files found!")
                             #print(self.patient_obj.get_ct_series())
 
                         for mr in study_data.get("mr", []):
@@ -45,7 +44,7 @@ class PatientHandler:
                             self.patient_obj.set_rt_dose_data_available()
                             self.patient_obj.add_rtdose(dose)
                             # TODO: hardcode raus!
-                            self.patient_obj.set_rt_dose_path(dose["path"])
+                            #self.patient_obj.set_rt_dose_path(dose["path"])
                             #print(self.patient_obj.get_rt_dose_series())
 
                         for plan in study_data.get("rtplan", []):
@@ -57,10 +56,33 @@ class PatientHandler:
                             self.patient_obj.add_seg(seg)
                             #print(self.patient_obj.get_segmantation_series())
 
-                        #self.patient_obj.resolve_relationships()
-
         except FileNotFoundError:
             print("JSON File not found!!!")
+
+    # TODO ct_series von list zu dict ändern für abfrage
+    def choose_active_set(self):
+        if self.patient_obj.get_ct_series():
+            print("\nVerfügbare CT-Sets:\n")
+
+            ct_set = self.patient_obj.get_ct_series()
+            for i, ct in enumerate(ct_set, start=1):
+                print(f"[{i}] {ct['description']}")
+
+            while True:
+                try:
+                    choice = int(input("\nCT-Set auswählen: "))
+
+                    if 1 <= choice <= len(ct_set):
+                        self.patient_obj.set_active_set(choice-1)
+                        return ct_set[choice - 1]["path"]
+
+                    print("Ungültige Auswahl.")
+
+                except ValueError:
+                    print("Bitte eine Zahl eingeben.")
+
+        rt_dose_list = self.patient_obj.get_rt_dose_series()
+        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
 
     def get_pat_obj(self):
         return self.patient_obj

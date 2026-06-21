@@ -10,7 +10,6 @@ class DicomIndexer:
         self._patient_list: list[str] = []
 
         self.root = root
-        #self.index = defaultdict(lambda: defaultdict(dict))
         self.index = defaultdict(
             lambda: defaultdict(
                 lambda: {

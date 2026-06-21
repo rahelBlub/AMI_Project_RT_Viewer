@@ -16,8 +16,12 @@ class Patient:
 
         self.active_set = None
 
+        # TODO active index per abfrage im Handler zuweisen
         self.active_ct_index = 0
+        self.active_mr_index = 0
         self.active_dose_index = 0
+        self.active_struct_index = 0
+        self.active_plan_index = 0
 
         self._patient_name: str = patient_id
         self._sop_instance_iud: str | None = None
@@ -62,6 +66,14 @@ class Patient:
 
     def add_seg(self, seg):
         self.segmentations.append(seg)
+
+    # SETTER for active sets ------------------------------------------------------
+
+    def set_active_ct_index(self, idx: int) -> None:
+        self.active_ct_index = idx
+
+    def set_active_mr_index(self, idx: int) -> None:
+        self.active_mr_index = idx
 
     # SETTER for Patient data----------------------------------------------------
 
