@@ -380,18 +380,23 @@ class CTViewer:
             self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
             self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
 
-            # TODO Update der Isolinien
-            if self.iso_axial:
-                for coll in self.iso_axial.collections:
-                    coll.remove()
+            self.dose_colorbar.update_normal(self.dose_axial)
 
-                self.iso_axial = self.add_dose_iso_to_view(
-                    self.ax_axial,
-                    self.z_idx,
-                    "Axial",
+            # Isolinien für alle drei Ansichten neu zeichnen
+            for iso_attr, ax_attr, view, idx in [
+                ("iso_axial", "ax_axial", "Axial", z),
+                ("iso_sagittal", "ax_sagittal", "Sagittal", x),
+                ("iso_coronal", "ax_coronal", "Coronal", y),
+            ]:
+                iso = getattr(self, iso_attr)
+                if iso:
+                    for coll in iso.collections:
+                        coll.remove()
+                setattr(
+                    self,
+                    iso_attr,
+                    self.add_dose_iso_to_view(getattr(self, ax_attr), idx, view),
                 )
-            # Create animation
-            #anim = FuncAnimation(fig, update, frames=100, interval=60, blit=False)
 
         self.fig.canvas.draw_idle()
 
