@@ -30,6 +30,7 @@ class Patient:
         self._body_part_examined: str | None = None
         self._slice_thickness: str | None = None
         self._patient_position: str | None = None
+        self._modality: str | None = None
 
         self._frame_reference_uid: str | None = None
 
@@ -109,6 +110,10 @@ class Patient:
     def set_frame_of_reference_uid(self, uid: str) -> None:
         if uid != "":
             self._frame_reference_uid = uid
+
+    def set_modality(self, modality: str) -> None:
+        if modality != "":
+            self._modality = modality
 
     ### SETTER for Paths --------------------------------------------------
 
@@ -207,6 +212,9 @@ class Patient:
 
     def get_frame_of_reference_uid(self):
         return self._frame_reference_uid
+
+    def get_modality(self) -> str | None:
+            return self._modality
 
     ### GETTER for Bool Variables ------------------------------------------------
 

@@ -192,6 +192,8 @@ class DicomHandler:
             self._pat.set_slice_thickness(image.SliceThickness)
         if image.__contains__("PatientPosition"):
             self._pat.set_patient_position(image.PatientPosition)
+        if image.__contains__("Modality"):
+            self._pat.set_modality(image.Modality)
 
         if image.__contains__("ImagePositionPatient"):
             self._pat.set_image_position_patient(image.ImagePositionPatient)

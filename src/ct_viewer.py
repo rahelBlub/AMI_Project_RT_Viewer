@@ -86,8 +86,22 @@ class CTViewer:
         ))
 
     def _create_figure(self):
-        # self.fig, self.axs = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT), facecolor="black")
-        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT), constrained_layout=True)
+        #self.fig = plt.subplots(2, 2, figsize=(FIG_WIDTH, FIG_HEIGHT))
+        self.fig = plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT))
+
+        # self.fig.subplots_adjust(
+        #     left=0.03, right=0.97,
+        #     top=0.92, bottom=0.18,
+        #     hspace=0.35, wspace=0.1,
+        # )
+        #
+        # gs = self.fig.add_gridspec(
+        #     2, 2,
+        #     left=0.03, right=0.97,
+        #     top=0.92, bottom=0.22,
+        #     hspace=0.35, wspace=0.1,
+        # )
+
         gs = self.fig.add_gridspec(2, 1, height_ratios=[4, 1])
         gs_top = gs[0].subgridspec(2, 2)
         gs_bottom = gs[1].subgridspec(2, 1)
@@ -99,8 +113,8 @@ class CTViewer:
         self.fig.text(
             0.02,
             0.925,
-            f"Body Part: {self.pat.get_body_part_examined()} \nSlice Thickness: {self.pat.get_slice_thickness()} \nPatient Position: {self.pat.get_patient_position()}",
-            fontsize=12,
+            f"Body Part: {self.pat.get_body_part_examined()} \nSlice Thickness: {self.pat.get_slice_thickness()} \nPatient Position: {self.pat.get_patient_position()} \nModality: {self.pat.get_modality()}",
+            fontsize=11,
             color="w",
         )
 
@@ -110,25 +124,90 @@ class CTViewer:
         self.ax_coronal = self.fig.add_subplot(gs_top[1, 0])
         self.ax_overview = self.fig.add_subplot(gs_top[1, 1])
 
-        # Achsen-Slider unter Bilder anordnen
-        self.ax_slider_z = self.slider_below(self.ax_axial, self.fig)
-        self.ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
-        self.ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
+        for ax in [self.ax_axial, self.ax_sagittal, self.ax_coronal, self.ax_overview]:
+            ax.axis("off")
 
-        # extra Slider im unteren Grid anordnen
+        # Achsen-Slider unter Bilder anordnen
+        # self.ax_slider_z = self.slider_below(self.ax_axial, self.fig)
+        # self.ax_slider_y = self.slider_below(self.ax_coronal, self.fig)
+        # self.ax_slider_x = self.slider_below(self.ax_sagittal, self.fig)
+        self.ax_slider_z = self._slider_ax(self.ax_axial, self.fig)
+        self.ax_slider_y = self._slider_ax(self.ax_coronal, self.fig)
+        self.ax_slider_x = self._slider_ax(self.ax_sagittal, self.fig)
+
+        # # extra Slider im unteren Grid anordnen
         self.ax_window = self.fig.add_subplot(gs_bottom[0])
         self.ax_slices = self.fig.add_subplot(gs_bottom[1])
+        # Window-Slider ganz unten
+        # self.ax_window = self.fig.add_axes([0.05, 0.10, 0.88, 0.018])
+        # self.ax_slices = self.fig.add_axes([0.05, 0.06, 0.88, 0.018])
 
-        for ax in [self.ax_axial, self.ax_sagittal, self.ax_coronal]:
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_frame_on(False)
+        # for ax in [self.ax_axial, self.ax_sagittal, self.ax_coronal]:
+        #     ax.set_xticks([])
+        #     ax.set_yticks([])
+        #     ax.set_frame_on(False)
 
-        # Achsenbeschriftung ausschalten
-        self.ax_axial.axis("off")
-        self.ax_sagittal.axis("off")
-        self.ax_coronal.axis("off")
-        self.ax_overview.axis("off")
+        self.status_text = self.fig.text(
+            0.5, 0.01,
+            "",
+            fontsize=10,
+            color="w",
+            ha="center",
+            va="bottom",
+            fontfamily="monospace",
+        )
+
+
+    def _add_overlay_title(self, ax, text: str):
+        ax.text(
+            0.02, 0.97, text,
+            transform=ax.transAxes,
+            fontsize=11, color="white",
+            va="top", ha="left",
+            bbox=dict(
+                facecolor="black",
+                alpha=0.45,
+                edgecolor="none",
+                pad=3,
+            ),
+        )
+
+    def _update_dose_stats(self, view: str, idx: int):
+        dose_slice, _ = self._get_dose_slice(view, idx)
+        valid = dose_slice[dose_slice > 0]
+
+        if valid.size == 0:
+            stats = f"{view} — keine Dosiswerte in dieser Schicht"
+        else:
+            stats = (
+                f"{view}  |  "
+                f"Min: {valid.min():.2f} Gy  "
+                f"Max: {valid.max():.2f} Gy  "
+                f"Mean: {valid.mean():.2f} Gy"
+            )
+        self.status_text.set_text(stats)
+
+    def _on_hover(self, event):
+
+        for ax, dose_attr, view, idx in [
+            (self.ax_axial, "dose_axial", "Axial", self.z_idx),
+            (self.ax_sagittal, "dose_sagittal", "Sagittal", self.x_idx),
+            (self.ax_coronal, "dose_coronal", "Coronal", self.y_idx),
+        ]:
+            if event.inaxes == ax:
+                x, y = int(event.xdata or 0), int(event.ydata or 0)
+                dose_slice, _ = self._get_dose_slice(view, idx)
+
+                h, w = dose_slice.shape
+                if 0 <= y < h and 0 <= x < w:
+                    val = dose_slice[y, x]
+                    label = f"{view}  |  x={x} y={y}  →  {val:.2f} Gy"
+                else:
+                    label = ""
+
+                self.status_text.set_text(label)
+                self.fig.canvas.draw_idle()
+                return
 
     def _get_ct_slice(self, view: str, idx: int):
         if view == "Axial":
@@ -170,16 +249,16 @@ class CTViewer:
             aspect=aspect,
         )
 
-        axis.set_title(view)
+        # axis.set_title(view)
+        self._add_overlay_title(axis, view)
 
         return img
 
 
     def add_dose_image_to_view(self, axis, idx: int, view: str):
-        threshold = 5.0 #Gy
-
         dose_slice, aspect = self._get_dose_slice(view, idx)
-        #dose_slice[dose_slice < threshold] = np.nan # NaN ausblenden
+        global_max = np.max(self.resampled_dose_volume)
+        threshold = 0.05 * global_max
 
         dose_slice = self.apply_window(
             dose_slice,
@@ -212,6 +291,22 @@ class CTViewer:
     def add_dose_iso_to_view(self, axis, idx: int, view: str):
         dose_slice, aspect = self._get_dose_slice(view, idx)
 
+        global_max = np.max(self.resampled_dose_volume)
+        threshold = 0.05 * global_max
+
+        levels = [
+            0.1 * global_max,
+            0.2 * global_max,
+            0.5 * global_max,
+            0.8 * global_max,
+        ]
+
+        slice_max = np.max(dose_slice)
+        levels = [lvl for lvl in levels if threshold < lvl <= slice_max]
+
+        if not levels:
+            return None
+
         dose_slice = self.apply_window(
             dose_slice,
             self.window_center,
@@ -220,18 +315,8 @@ class CTViewer:
 
         isoline = axis.contour(
             dose_slice,
-            levels=[
-                0.1 * np.max(dose_slice),
-                0.2 * np.max(dose_slice),
-                0.5 * np.max(dose_slice),
-                0.8 * np.max(dose_slice),
-            ],
-            colors=[
-                "blue",
-                "green",
-                "yellow",
-                "red",
-                ],
+            levels=levels,
+            colors=["blue", "green", "yellow", "red"][:len(levels)],
             linewidths=0.5,
         )
 
@@ -244,17 +329,17 @@ class CTViewer:
             self.z_idx,
             "Axial",
         )
-        # TODO: Abfrage ob RT Dose Vorhanden
-        self.dose_axial = self.add_dose_image_to_view(
-            self.ax_axial,
-            self.z_idx,
-            "Axial",
-        )
-        self.iso_axial = self.add_dose_iso_to_view(
-            self.ax_axial,
-            self.z_idx,
-            "Axial",
-        )
+        if self.dose_volume is not None:
+            self.dose_axial = self.add_dose_image_to_view(
+                self.ax_axial,
+                self.z_idx,
+                "Axial",
+            )
+            self.iso_axial = self.add_dose_iso_to_view(
+                self.ax_axial,
+                self.z_idx,
+                "Axial",
+            )
 
         ## Image Coronal
         self.img_coronal = self.create_image(
@@ -298,6 +383,14 @@ class CTViewer:
     def slider_below(ax, fig, height=0.02, offset=0.04):
         bbox = ax.get_position()
         return fig.add_axes([bbox.x0, bbox.y0 - offset, bbox.width, height])
+
+    @staticmethod
+    def _slider_ax(ref_ax, fig, height=0.018):
+        pos = ref_ax.get_position()
+        return fig.add_axes(
+            [pos.x0, pos.y0 - 0.045, pos.width, height],
+            facecolor=FIG_BG,  # aus ui_theme
+        )
 
     def _create_sliders(self):
 
@@ -398,6 +491,9 @@ class CTViewer:
                     self.add_dose_iso_to_view(getattr(self, ax_attr), idx, view),
                 )
 
+                self.z_idx, self.y_idx, self.x_idx = z, y, x
+                self._update_dose_stats("Axial", z)
+
         self.fig.canvas.draw_idle()
 
     def show(self):
@@ -405,9 +501,8 @@ class CTViewer:
         self._create_figure()
         self._create_image_view()
         self._create_sliders()
-
-        #plt.figure()
-        #plt.hist(self.dose_volume.flatten(), bins=100)
+        self._update_dose_stats("Axial", self.z_idx)
+        self.fig.canvas.mpl_connect("motion_notify_event", self._on_hover)
         plt.show()
 
     @staticmethod

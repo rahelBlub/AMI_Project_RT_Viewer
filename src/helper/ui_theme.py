@@ -37,6 +37,9 @@ def create_slider(ax, label, vmin, vmax, vinit, color):
 
     return slider
 
+def text_temp():
+    plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT))
+
 
 # def image_style():
 # plt.fig.set_facecolor("#1a1a1a")

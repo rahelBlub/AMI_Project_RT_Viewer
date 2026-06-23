@@ -17,15 +17,15 @@
 
 - [x] Anzeige als orthogonale MPR 
 - [x] HU-Einstellfenster
-- [ ] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
+- [x] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
   - [x] Funktion die Metadaten als dict zurückgibt
   - [x] Metadaten in Frontend eingebunden
-  - [ ] Funktion die Strukturen zurückgibt
-  - [ ] Einbindung Strukturen an Frontend
+  - [x] Funktion die Strukturen zurückgibt
+  - [x] Einbindung Strukturen an Frontend
 - [ ] An-/Ausschalten der Strukturen (aus RT-Structure-Set)
-- [ ] Dosisanzeige als transparente Colourwash 
-  - [ ] Isolinien
-  - [ ] Legende
+- [x] Dosisanzeige als transparente Colourwash 
+  - [x] Isolinien
+  - [x] Legende
 - [ ] Anzeige der Dosis Min/Max/Mean einer Schicht
 - [ ] aktuelle Dosis Maus über Bild
 

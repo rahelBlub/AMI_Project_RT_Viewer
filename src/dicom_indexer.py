@@ -50,7 +50,6 @@ class DicomIndexer:
 
                 study = ds.get("StudyInstanceUID", "NO_STUDY")
                 modality = ds.get("Modality", "UNKNOWN")
-                study_desc = ds.get("StudyDescription", study)
 
                 entry = self.index[patient][study]
 
