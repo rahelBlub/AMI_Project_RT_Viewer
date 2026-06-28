@@ -1,4 +1,7 @@
-from src.ct_viewer import CTViewer
+from PyQt6.QtWidgets import QApplication
+
+#from src.ct_viewer import CTViewer
+from src.viewer_ct import CTViewer
 from src.dicom_handler import DicomHandler
 from src.dicom_indexer import DicomIndexer
 from src.patient_handler import PatientHandler
@@ -7,6 +10,11 @@ from src.patient_handler import PatientHandler
 # TODO: https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
 
 if __name__ == "__main__":
+    import sys
+    print()
+    print("executing path: ", sys.executable)
+    print("path: ", sys.path)
+
     indexer = DicomIndexer("./data/RT")
 
     pat_list = indexer.get_patient_list()
@@ -23,9 +31,11 @@ if __name__ == "__main__":
     print(f"RT-DOSE-Path: {cur_pat.get_rt_dose_path()}")
 
     if cur_pat.get_ct_series():
+        app = QApplication(sys.argv)
         ct_viewer = CTViewer(cur_pat)
         ct_viewer.show_image_data()
         ct_viewer.show()
+        sys.exit(app.exec())
     else:
         raise ValueError("Patient has no CT-series!")
         # mr_viewer = MRViewer(cur_pat)
