@@ -72,9 +72,11 @@ class PatientHandler:
                     if 1 <= choice <= len(ct_set):
                         self.patient_obj.set_active_set(choice-1)
 
-                        # TODO Abfrage ob vorhanden und wenn > 1 auch mit auswahl
-                        rt_dose_list = self.patient_obj.get_rt_dose_series()
-                        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+                        if self.patient_obj.has_rt_dose_available():
+                            rt_dose_list = self.patient_obj.get_rt_dose_series()
+                            self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+                        else:
+                            print("Patient has no RT-Dose")
 
                         return ct_set[choice - 1]["path"]
 
@@ -97,9 +99,11 @@ class PatientHandler:
                     if 1 <= choice <= len(mr_set):
                         self.patient_obj.set_active_set(choice - 1)
 
-                        # TODO Abfrage ob vorhanden und wenn > 1 auch mit auswahl
-                        rt_dose_list = self.patient_obj.get_rt_dose_series()
-                        self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+                        if self.patient_obj.has_rt_dose_available():
+                            rt_dose_list = self.patient_obj.get_rt_dose_series()
+                            self.patient_obj.set_rt_dose_path(rt_dose_list[0]["path"])
+                        else:
+                            print("Patient has no RT-Dose")
 
                         return mr_set[choice - 1]["path"]
 
@@ -112,8 +116,6 @@ class PatientHandler:
             print("invalid Patient!")
             print("Patient has no CT or MR Set")
             return None
-
-
 
     def get_pat_obj(self):
         return self.patient_obj

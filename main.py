@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QApplication
+import sys
 
+from PyQt6.QtWidgets import QApplication
 #from src.ct_viewer import CTViewer
 from src.viewer_ct import CTViewer
 from src.dicom_handler import DicomHandler
@@ -7,21 +8,15 @@ from src.dicom_indexer import DicomIndexer
 from src.patient_handler import PatientHandler
 
 
-# TODO: https://github.com/brenthuisman/dosia/blob/master/dicom/__init__.py
+# TODO: Code CleanUp
 
 if __name__ == "__main__":
-    import sys
-    print()
-    print("executing path: ", sys.executable)
-    print("path: ", sys.path)
 
     indexer = DicomIndexer("./data/RT")
 
     pat_list = indexer.get_patient_list()
-    print(pat_list)
-
+    #print(pat_list)
     selected_patient = indexer.select_patient(pat_list)
-
     print(f"\nLade Patient: {selected_patient}")
 
     pat_handler = PatientHandler(selected_patient, indexer.get_json_file_dir())

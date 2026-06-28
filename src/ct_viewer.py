@@ -16,6 +16,7 @@ PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 WINDOW_CENTER = 60 #40
 WINDOW_WIDTH = 600 #400
 
+# TODO überprüfen, ob alles so in neuer viewer_ct passt dann löschen und cleanup
 
 class CTViewer(QMainWindow):
     CMAP = "grey"

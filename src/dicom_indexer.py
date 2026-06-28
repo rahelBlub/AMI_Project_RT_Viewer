@@ -140,7 +140,6 @@ class DicomIndexer:
             print("JSON File not found!!!")
             return False
 
-    # TODO: Patientendaten am Anfang über Console auswählbar, passt hier eigentlich nicht rein aber wusste erstmal nicht wohin sonst
     @staticmethod
     def select_patient(patient_list: list[str]) -> str:
         print("\nVerfügbare Patienten:\n")
