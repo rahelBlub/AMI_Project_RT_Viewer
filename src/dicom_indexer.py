@@ -10,6 +10,7 @@ class DicomIndexer:
     """
     Klasse zum Erzeugen der dicom_index.json
     """
+
     def __init__(self, root):
         self._patient_list: list[str] = []
 
@@ -22,7 +23,7 @@ class DicomIndexer:
                     "dose": [],
                     "rtstruct": [],
                     "rtplan": [],
-                    "seg": []
+                    "seg": [],
                 }
             )
         )
@@ -64,49 +65,55 @@ class DicomIndexer:
 
                 if modality == "CT":
                     if path not in [x["path"] for x in entry["ct"]]:
-                        entry["ct"].append({
-                            "path": path,
-                            "series_uid": ds.get("SeriesInstanceUID"),
-                            "description": ds.get("SeriesDescription", "")
-                        })
+                        entry["ct"].append(
+                            {
+                                "path": path,
+                                "series_uid": ds.get("SeriesInstanceUID"),
+                                "description": ds.get("SeriesDescription", ""),
+                            }
+                        )
 
                 elif modality == "MR":
                     if path not in [x["path"] for x in entry["mr"]]:
-                        entry["mr"].append({
-                            "path": path,
-                            "series_uid": ds.get("SeriesInstanceUID"),
-                            "description": ds.get("SeriesDescription", "")
-                        })
+                        entry["mr"].append(
+                            {
+                                "path": path,
+                                "series_uid": ds.get("SeriesInstanceUID"),
+                                "description": ds.get("SeriesDescription", ""),
+                            }
+                        )
 
                 elif modality == "RTDOSE":
-                    entry["dose"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID")
-                    })
+                    entry["dose"].append(
+                        {"path": full_path, "sop_uid": ds.get("SOPInstanceUID")}
+                    )
 
                 elif modality == "RTSTRUCT":
-                    entry["rtstruct"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID"),
-                        "description": ds.get("StructureSetLabel", "")
-                    })
+                    entry["rtstruct"].append(
+                        {
+                            "path": full_path,
+                            "sop_uid": ds.get("SOPInstanceUID"),
+                            "description": ds.get("StructureSetLabel", ""),
+                        }
+                    )
 
                 elif modality == "RTPLAN":
-                    entry["rtplan"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID")
-                    })
+                    entry["rtplan"].append(
+                        {"path": full_path, "sop_uid": ds.get("SOPInstanceUID")}
+                    )
 
                 elif modality == "SEG":
-                    entry["seg"].append({
-                        "path": full_path,
-                        "description": ds.get("SeriesDescription", "")
-                    })
+                    entry["seg"].append(
+                        {
+                            "path": full_path,
+                            "description": ds.get("SeriesDescription", ""),
+                        }
+                    )
 
         return self.index
 
     def save(self):
-        """ speichert die Daten aus dem dict in einer json """
+        """speichert die Daten aus dem dict in einer json"""
         with open(self._json_file_name, "w") as f:
             json.dump(self.index, f, indent=2)
 
@@ -117,13 +124,13 @@ class DicomIndexer:
         return self._json_file_name
 
     def get_patient_list(self) -> list[str]:
-        """ gibt die komplette Liste der verfügbaren Patienten zurück """
+        """gibt die komplette Liste der verfügbaren Patienten zurück"""
         return self._patient_list
 
     def _is_json_complete(self) -> bool:
-        """ geht durch die json und prüft, ob die Anzahl der Patienten noch
-         mit der Menge der Daten in der json übereinstimmt, also ob neue Daten dazugekommen sind oder
-         gelöscht wurden"""
+        """geht durch die json und prüft, ob die Anzahl der Patienten noch
+        mit der Menge der Daten in der json übereinstimmt, also ob neue Daten dazugekommen sind oder
+        gelöscht wurden"""
         data_dir = "./data/RT"
         dir_list = os.listdir(data_dir)
 
@@ -141,7 +148,7 @@ class DicomIndexer:
 
     @staticmethod
     def select_patient(patient_list: list[str]) -> str:
-        """ Terminal UI um einen Patienten aus den Daten auszuwählen """
+        """Terminal UI um einen Patienten aus den Daten auszuwählen"""
         print("\nVerfügbare Patienten:\n")
 
         for i, patient in enumerate(patient_list, start=1):
