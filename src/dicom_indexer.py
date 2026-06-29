@@ -137,7 +137,7 @@ class DicomIndexer:
                 return len(data) == len(dir_list)
 
         except FileNotFoundError:
-            print("JSON File not found!!!")
+            print("No JSON File - new will be generated")
             return False
 
     @staticmethod

@@ -1,19 +1,30 @@
+from typing import Any
 import ijson
+
 from src.patient import Patient
 
 
 class PatientHandler:
+    """
+    Klasse die Patienten aus der dicom_index.json ausliest
+    und ein Objekt vom Typ "Patient" anlegt
+    """
     def __init__(self, patient_name, json_file_dir):
         self.patientName = patient_name
         self.json_file_dir = json_file_dir
 
+        # Patienten-Objekt anlegen
         self.patient_obj = Patient(patient_name)
 
-        self.check_json_file()
-        self.choose_active_set()
+        self._check_json_file()
+        self._choose_active_set()
 
-
-    def check_json_file(self):
+    def _check_json_file(self) -> None:
+        """
+        liest die Daten aus der json und übergibt die einzelnen
+        Parameter in die Patientenklasse
+        → Aufruf in __init__
+        """
         try:
             with open(self.json_file_dir, "r") as file:
 
@@ -22,7 +33,6 @@ class PatientHandler:
                 for json_item in cur_patient:
 
                     for study_uid, study_data in json_item.items():
-
                         self.patient_obj.set_sop_instance_iud(study_uid)
 
                         for ct in study_data.get("ct", []):
@@ -57,7 +67,13 @@ class PatientHandler:
         except FileNotFoundError:
             print("JSON File not found!!!")
 
-    def choose_active_set(self):
+    def _choose_active_set(self) -> list[Any] | None:
+        """
+        Terminal UI zur Auswahl der Daten
+        :return: Liste mit den Daten oder None
+        → Aufruf in __init__
+        """
+        # CT Sets laden
         if self.patient_obj.get_ct_series():
             print("\nVerfügbare CT-Sets:\n")
 
@@ -65,6 +81,7 @@ class PatientHandler:
             for i, ct in enumerate(ct_set, start=1):
                 print(f"[{i}] {ct['description']}")
 
+            # Auswahl welche CT Daten
             while True:
                 try:
                     choice = int(input("\nCT-Set auswählen: "))
@@ -85,6 +102,7 @@ class PatientHandler:
                 except ValueError:
                     print("Bitte eine Zahl eingeben.")
 
+        # MRT Daten laden
         elif self.patient_obj.get_mr_series():
             print("\nVerfügbare MR-Sets:\n")
 
@@ -92,6 +110,7 @@ class PatientHandler:
             for i, mr in enumerate(mr_set, start=1):
                 print(f"[{i}] {mr['description']}")
 
+            # Auswahl welche MRT Daten
             while True:
                 try:
                     choice = int(input("\nMR-Set auswählen: "))
@@ -118,4 +137,5 @@ class PatientHandler:
             return None
 
     def get_pat_obj(self):
+        """gibt das Patient-Objekt zurück"""
         return self.patient_obj

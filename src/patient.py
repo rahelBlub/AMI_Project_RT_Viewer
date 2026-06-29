@@ -16,6 +16,7 @@ class Patient:
 
         self.active_set = None
 
+        # TODO active index per abfrage im Handler zuweisen
         self.active_ct_index = 0
         self.active_mr_index = 0
         self.active_dose_index = 0
@@ -157,7 +158,7 @@ class Patient:
             return None
         return self.ct_series[self.active_ct_index]
 
-    def get_active_ct_path(self):
+    def get_active_ct_path(self) -> list[...]:
         ct = self.get_active_ct()
         return ct["path"] if ct else None
 
