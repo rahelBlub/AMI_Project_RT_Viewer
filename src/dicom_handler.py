@@ -176,7 +176,7 @@ class DicomHandler:
         return dose_img
 
     def get_metadata_to_patient(self):
-        """ Übergibt die Metadaten in das Patient-Objekt """
+        """Übergibt die Metadaten in das Patient-Objekt"""
         image = self._dicom_list[0]
 
         if image.__contains__("PatientAge"):

@@ -9,6 +9,7 @@ class PatientHandler:
     Klasse die Patienten aus der dicom_index.json ausliest
     und ein Objekt vom Typ "Patient" anlegt
     """
+
     def __init__(self, patient_name, json_file_dir):
         self.patientName = patient_name
         self.json_file_dir = json_file_dir
@@ -38,31 +39,31 @@ class PatientHandler:
                         for ct in study_data.get("ct", []):
                             self.patient_obj.set_ct_data_available()
                             self.patient_obj.add_ct(ct)
-                            #print(self.patient_obj.get_ct_series())
+                            # print(self.patient_obj.get_ct_series())
 
                         for mr in study_data.get("mr", []):
                             self.patient_obj.set_mr_data_available()
                             self.patient_obj.add_mr(mr)
-                            #print(self.patient_obj.get_mr_series())
+                            # print(self.patient_obj.get_mr_series())
 
                         for rtstruct in study_data.get("rtstruct", []):
                             self.patient_obj.set_rt_struct_data_available()
                             self.patient_obj.add_rtstruct(rtstruct)
-                            #print(self.patient_obj.get_rt_struct_series())
+                            # print(self.patient_obj.get_rt_struct_series())
 
                         for dose in study_data.get("dose", []):
                             self.patient_obj.set_rt_dose_data_available()
                             self.patient_obj.add_rtdose(dose)
-                            #print(self.patient_obj.get_rt_dose_series())
+                            # print(self.patient_obj.get_rt_dose_series())
 
                         for plan in study_data.get("rtplan", []):
                             self.patient_obj.add_rtplan(plan)
-                            #print(self.patient_obj.get_rt_plan_sereies())
+                            # print(self.patient_obj.get_rt_plan_sereies())
 
                         for seg in study_data.get("seg", []):
                             self.patient_obj.set_seg_data_available()
                             self.patient_obj.add_seg(seg)
-                            #print(self.patient_obj.get_segmantation_series())
+                            # print(self.patient_obj.get_segmantation_series())
 
         except FileNotFoundError:
             print("JSON File not found!!!")
@@ -87,7 +88,7 @@ class PatientHandler:
                     choice = int(input("\nCT-Set auswählen: "))
 
                     if 1 <= choice <= len(ct_set):
-                        self.patient_obj.set_active_set(choice-1)
+                        self.patient_obj.set_active_set(choice - 1)
 
                         if self.patient_obj.has_rt_dose_available():
                             rt_dose_list = self.patient_obj.get_rt_dose_series()

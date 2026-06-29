@@ -6,6 +6,7 @@ class Patient:
     """
     Klasse, die die Daten eines Patientens kapselt
     """
+
     def __init__(self, patient_id):
         # Liste der Daten:
         self.ct_series = []
