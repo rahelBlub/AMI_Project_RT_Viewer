@@ -54,7 +54,7 @@ class DicomHandler:
                     ds = pydicom.dcmread(full_path)
                     files.append(ds)
                 except Exception as e:
-                    print("Exception in _get_dcm_files(): ", e)
+                    print("Exception in dicom_handler._get_dcm_files(): ", e)
                     continue
 
         return files
