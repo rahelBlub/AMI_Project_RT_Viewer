@@ -1,11 +1,10 @@
 import os
-from typing import Any
-
 import numpy as np
+from typing import Any
 import pydicom
-from SimpleITK import Image
 from pydicom import FileDataset
 import SimpleITK as sitk
+from SimpleITK import Image
 
 from src.patient import Patient
 
