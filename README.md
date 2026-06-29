@@ -71,6 +71,16 @@ CT-Set auswählen: 1
 
 Hier haben wir immer den ersten Satz genutzt.
 
+Anschließend wird das Fenster des CT Viewers geöffent:
+
+<img src="data/images/CT_View.png">
+
+Mit den jeweilige Slidern unter den Bildern wird durch die einzelnen Schnittbilder des Datensatzes iteriert. 
+Gleichzitig passt sich die Dosisverteilung  an. Die Intensität der Dosis wird zum einen durch die Skala auf der rechten Seite des Bildes verdeutlicht 
+und weiter am linken unteren Bildrand in Gy angezeigt, wenn mit der Maus über die entsprechende Bildstelle gehovert wird.
+
+Am unteren Rand des Fensters befinden sich die beiden Slider, welche der Einstellung des Window Center und Window Width dienen.
+
 ## Aufgabenstellung
 
 ### Todo Liste
