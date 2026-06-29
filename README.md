@@ -1,17 +1,6 @@
 # Projekt2: RT-Viewer
 
 ---
-## Inhaltsverzeichnis
-- [Setup](...)
-- [Aufgabenstellung](#aufgabenstellung)
-  - [Todo Liste](#todo-liste)
-  - [Folie](#folie)
-- [Planung](#planung)
-  - [Initial](#initial)
-  - [Erste Implementierungen](#erste-implementierungen)
-- [Shell Commands](#shell-commands)
-
----
 ## Setup
 
 ```shell
@@ -26,9 +15,18 @@ AMI-Project RT-Viewer\data\RT
 Als nächstes müssen die requirements.txt installiert werden.
 
 ```bash
-pip install requirements.txt
+pip install -r .\requirements.txt
 ```
+````shell
+# create virtual enviroment /.venv :
+python3 -m venv .venv
+
+#activate virtual enviroment:
+source .venv/bin/activate
+````
+
 Mit Starten der `main.py` wird das Programm ausgeführt.
+
 
 ```bash
 python main.py
@@ -76,30 +74,12 @@ Anschließend wird das Fenster des CT Viewers geöffent:
 <img src="data/images/CT_View.png">
 
 Mit den jeweilige Slidern unter den Bildern wird durch die einzelnen Schnittbilder des Datensatzes iteriert. 
-Gleichzitig passt sich die Dosisverteilung  an. Die Intensität der Dosis wird zum einen durch die Skala auf der rechten Seite des Bildes verdeutlicht 
+Gleichzeitig passt sich die Dosisverteilung an. Die Intensität der Dosis wird einmal durch die Skala auf der rechten Seite des Bildes verdeutlicht 
 und weiter am linken unteren Bildrand in Gy angezeigt, wenn mit der Maus über die entsprechende Bildstelle gehovert wird.
 
 Am unteren Rand des Fensters befinden sich die beiden Slider, welche der Einstellung des Window Center und Window Width dienen.
 
 ## Aufgabenstellung
-
-### Todo Liste
-
-- [x] Anzeige als orthogonale MPR 
-- [x] HU-Einstellfenster
-- [x] Anzeige einer Liste alle Strukturen mit DICOM-Metadaten
-  - [x] Funktion die Metadaten als dict zurückgibt
-  - [x] Metadaten in Frontend eingebunden
-  - [x] Funktion die Strukturen zurückgibt
-  - [x] Einbindung Strukturen an Frontend
-- [ ] An-/Ausschalten der Strukturen (aus RT-Structure-Set)
-- [x] Dosisanzeige als transparente Colourwash 
-  - [x] Isolinien
-  - [x] Legende
-- [ ] Anzeige der Dosis Min/Max/Mean einer Schicht
-- [ ] aktuelle Dosis Maus über Bild
-
-### Folie
 
 <table>
 <tr>
@@ -127,77 +107,5 @@ Herausforderungen:
 </table>
 
 
----
-## Planung
 
-### Initial
 
-Erste Idee wie der Code strukturiert sein soll:
-````mermaid
----
-config:
-  theme: 'default'
----
-classDiagram
-    class BilderHandler{
-        - dcm_list: list[str]
-        + calc_volume(dcm_list)
-        + calc_voxel_spacing()
-        + update()
-    }
-    BilderHandler --> main
-    class main{
-        + daten_plotten
-        + klasse_aufrufen
-    }
-````
-
-### Erste Implementierungen
-````mermaid
----
-config:
-  theme: 'default'
----
-classDiagram
-    class DicomHandler{
-        - _dicom_list: list[FileDataset]
-        + dcm_data_dir: str
-        - _get_dcm_files()
-        - _sort_dicom_list()
-        + create_ct_volume()
-        + get_voxelspacing()
-        + get_modality()
-    }
-    class CTViewer{
-        + volume: shape
-        + dx: float
-        + dy: float
-        + dz: float
-        + x_idx: int
-        + y_idx: int
-        + z_idx: int
-        - _create_figure()
-        - _create_images()
-        - _create_sliders()
-        - _update()
-        + show()
-        + change_cmap()
-        + change_interpolation()
-    }
-    DicomHandler --> main
-    CTViewer --> main
-````
----
-## Shell Commands:
-
-````shell
-pip install -r .\requirements.txt
-````
-
-````shell
-# create virtual enviroment /.venv :
-python3 -m venv .venv
-
-#activate virtual enviroment:
-source .venv/bin/activate
-````
