@@ -10,63 +10,11 @@ import matplotlib.image as mpimg
 
 from src.patient import Patient
 from src.dicom_handler import DicomHandler
+from src.view_panel import ViewPanel
 
 PATIENT_VIEW_PATH = "./data/images/patient_planes.png"
 WINDOW_CENTER = 40
 WINDOW_WIDTH = 400
-
-
-class ViewPanel(QWidget):
-    BORDER = {"Axial": "#00cc44", "Sagittal": "#ff3333", "Coronal": "#3399ff"}
-    SPINE_COLOR = {"Axial": "#00cc44", "Sagittal": "#ff3333", "Coronal": "#3399ff"}
-
-    def __init__(self, view: str, n_slices: int, pat: Patient = None, parent=None):
-        super().__init__(parent)
-        self.view = view
-        self.pat = pat
-        color = self.BORDER[view]
-        self.setStyleSheet(f"border: 2px solid {color}; border-radius: 4px;")
-        self.setStyleSheet("background-color: #111111;")
-
-        self.fig = Figure(facecolor="#111111")
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_facecolor("#111111")
-        self.ax.set_xticks([])
-        self.ax.set_yticks([])
-        for spine in self.ax.spines.values():
-            spine.set_visible(True)
-            spine.set_edgecolor(self.SPINE_COLOR[view])
-            spine.set_linewidth(2.5)
-        self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
-
-        self.canvas = FigureCanvasQTAgg(self.fig)
-        self.canvas.setStyleSheet("border: none;")
-
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setRange(0, n_slices - 1)
-        self.slider.setValue(n_slices // 2)
-        self.slider.setStyleSheet("border: none; margin: 2px 4px;")
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.canvas)
-        layout.addWidget(self.slider)
-
-        if pat is not None:
-            self.fig.text(
-                0.02, 0.02,
-                f"Body Part: {self.pat.get_body_part_examined()}\n"
-                f"Slice Thickness: {self.pat.get_slice_thickness()}\n"
-                f"Patient Position: {self.pat.get_patient_position()}\n"
-                f"Modality: {self.pat.get_modality()}",
-                fontsize=9,
-                color="w",
-                va="bottom",
-                transform=self.fig.transFigure,
-            )
-
-
 
 class CTViewer(QMainWindow):
     CMAP = "grey"
@@ -77,7 +25,6 @@ class CTViewer(QMainWindow):
         self.setWindowTitle(
             f"{patient.get_patient_name()}  {patient.get_patient_age()}  {patient.get_patient_sex()}"
         )
-        self.setStyleSheet("background-color: #1a1a1a; color: white;")
 
         self.overview_img = mpimg.imread(PATIENT_VIEW_PATH)
         self.pat = patient
@@ -91,7 +38,7 @@ class CTViewer(QMainWindow):
         self.ct_img = None
         self.dose_img = None
 
-        if self.pat.get_rt_dose_path():
+        if self.pat.has_rt_dose_available():
             self.ct_img = d_handler.get_ct_image(self.ct_volume, self.dx, self.dy, self.dz)
             self.dose_img = d_handler.get_dose_image()
             self.dose_volume = d_handler.get_rt_dose_volume()
@@ -143,7 +90,7 @@ class CTViewer(QMainWindow):
         ov_ax.set_facecolor("#111111")
         ov_fig.subplots_adjust(left=0, right=1, top=0.92, bottom=0)
         ov_canvas = FigureCanvasQTAgg(ov_fig)
-        ov_canvas.setStyleSheet("border: none;")
+        #ov_canvas.setStyleSheet("border: none;")
         ov_layout = QVBoxLayout(self.panel_overview)
         ov_layout.setContentsMargins(0, 0, 0, 0)
         ov_layout.addWidget(ov_canvas)
@@ -177,11 +124,8 @@ class CTViewer(QMainWindow):
         bottom.addWidget(QLabel("Window Width (HU)", styleSheet=lbl_style))
         bottom.addWidget(self.slider_ww)
 
-        # --- Status Label ---
         self.status_label = QLabel("")
-        self.status_label.setStyleSheet(
-            "border: none; color: #aaa; font-family: monospace; font-size: 11px; padding: 2px 8px;"
-        )
+        self.status_label.setStyleSheet("border: none; color: #aaa; font-family: monospace;  font-size: 11px, padding: 2px 8px;")
 
         # --- Root Layout ---
         root = QVBoxLayout()
@@ -195,7 +139,7 @@ class CTViewer(QMainWindow):
         central.setLayout(root)
         self.setCentralWidget(central)
 
-        # --- Signals verbinden ---
+        # --- Signals update ---
         self.slider_z.valueChanged.connect(self._update)
         self.slider_y.valueChanged.connect(self._update)
         self.slider_x.valueChanged.connect(self._update)
@@ -207,12 +151,14 @@ class CTViewer(QMainWindow):
         self.panel_sagittal.canvas.mpl_connect("motion_notify_event", self._on_hover)
         self.panel_coronal.canvas.mpl_connect("motion_notify_event", self._on_hover)
 
-        # Initiales Zeichnen
         self._draw_all()
 
     # ------------------------------------------------------------------ helpers
 
     def _get_ct_slice(self, view: str, idx: int):
+        """
+        Aktuellen Index der im Bild anzuzeigenden CT-Slice
+        """
         if view == "Axial":
             return self.ct_volume[idx, :, :], self.dy / self.dx
         if view == "Coronal":
@@ -222,6 +168,9 @@ class CTViewer(QMainWindow):
         raise ValueError("Unknown view")
 
     def _get_dose_slice(self, view: str, idx: int):
+        """
+        Aktuellen Index der im Bild anzuzeigenden Dosis-Slice
+        """
         if view == "Axial":
             return self.resampled_dose_volume[idx, :, :], self.dy / self.dx
         if view == "Coronal":
@@ -235,6 +184,11 @@ class CTViewer(QMainWindow):
         return image.clip(center - width / 2, center + width / 2)
 
     def _add_overlay_title(self, ax, text: str):
+        """
+        Anzeige der Achsen-Ansicht am linken oberen Rand des Bildes
+        ax: -> sagittal, coronal, axial
+        text: -> str
+        """
         ax.text(
             0.02, 0.97, text,
             transform=ax.transAxes,
@@ -246,6 +200,9 @@ class CTViewer(QMainWindow):
     # ------------------------------------------------------------------ drawing
 
     def _draw_ct(self, ax, view: str, idx: int):
+        """
+        Anzeige der CT Slices in der geforderten axialen Ansicht.
+        """
         ct_slice, aspect = self._get_ct_slice(view, idx)
         ct_slice = self.apply_window(ct_slice, self.window_center, self.window_width)
         img = ax.imshow(ct_slice, cmap=self.CMAP, interpolation=self.INTERPOLATION, aspect=aspect)
@@ -253,6 +210,9 @@ class CTViewer(QMainWindow):
         return img
 
     def _draw_dose(self, ax, view: str, idx: int, fig: Figure):
+        """
+        Dosisanzeige auf den CT Bilder abbilden, falls diese vorhanden
+        """
         dose_slice, aspect = self._get_dose_slice(view, idx)
         global_max = np.max(self.resampled_dose_volume)
         threshold = 0.05 * global_max
@@ -266,6 +226,9 @@ class CTViewer(QMainWindow):
         return img_dose
 
     def _draw_iso(self, ax, view: str, idx: int):
+        """
+        Isolininen auf den CT Images abbilden, falls RT-DOSE vorhanden
+        """
         dose_slice, _ = self._get_dose_slice(view, idx)
         global_max = np.max(self.resampled_dose_volume)
         threshold = 0.05 * global_max
@@ -281,6 +244,9 @@ class CTViewer(QMainWindow):
         )
 
     def _draw_all(self):
+        """
+        Aufruf um alle Ansichten (Sagittal, Coronal, Axial) in einem Fenster anzuzeigen
+        """
         has_dose = self.dose_volume is not None
 
         for panel, view, idx in [
@@ -289,21 +255,18 @@ class CTViewer(QMainWindow):
             (self.panel_coronal,  "Coronal",  self.y_idx),
         ]:
             panel.ax.cla()
-            panel.ax.set_xticks([])
-            panel.ax.set_yticks([])
-            for spine in panel.ax.spines.values():
-                spine.set_visible(False)
 
         self.img_axial    = self._draw_ct(self.ax_axial,    "Axial",    self.z_idx)
         self.img_sagittal = self._draw_ct(self.ax_sagittal, "Sagittal", self.x_idx)
         self.img_coronal  = self._draw_ct(self.ax_coronal,  "Coronal",  self.y_idx)
 
+        # wenn Dosiswert vorhanden, anzeigen
         if has_dose:
             self.dose_axial    = self._draw_dose(self.ax_axial,    "Axial",    self.z_idx, self.panel_axial.fig)
             self.dose_sagittal = self._draw_dose(self.ax_sagittal, "Sagittal", self.x_idx, self.panel_sagittal.fig)
             self.dose_coronal  = self._draw_dose(self.ax_coronal,  "Coronal",  self.y_idx, self.panel_coronal.fig)
 
-            # Colorbar in allen drei Panels
+            # Colorbars für jede Ansicht
             for panel, dose_img in [
                 (self.panel_axial, self.dose_axial),
                 (self.panel_sagittal, self.dose_sagittal),
@@ -318,14 +281,12 @@ class CTViewer(QMainWindow):
                 for lbl in cb.ax.get_yticklabels():
                     lbl.set_color("white")
 
-            # Referenz auf axiale Colorbar für update_normal
             self.dose_colorbar = self.panel_axial.fig.axes[-1]
 
+            # Isolinien
             self.iso_axial    = self._draw_iso(self.ax_axial,    "Axial",    self.z_idx)
             self.iso_sagittal = self._draw_iso(self.ax_sagittal, "Sagittal", self.x_idx)
             self.iso_coronal  = self._draw_iso(self.ax_coronal,  "Coronal",  self.y_idx)
-
-            self._update_dose_stats("Axial", self.z_idx)
 
         for panel in [self.panel_axial, self.panel_sagittal, self.panel_coronal]:
             panel.canvas.draw_idle()
@@ -333,13 +294,18 @@ class CTViewer(QMainWindow):
     # ------------------------------------------------------------------ update
 
     def _update(self):
+        """
+        Updated die aktuelle Ansicht des Viewer auf den nächsten DICOM-Slice
+        """
+        # Slider update
         z = self.slider_z.value()
         y = self.slider_y.value()
         x = self.slider_x.value()
         self.window_center = self.slider_wc.value()
         self.window_width  = self.slider_ww.value()
-        self.z_idx, self.y_idx, self.x_idx = z, y, x
 
+        self.z_idx, self.y_idx, self.x_idx = z, y, x
+        # CT Slice update
         self.img_axial.set_data(
             self.apply_window(self.ct_volume[z, :, :], self.window_center, self.window_width))
         self.img_sagittal.set_data(
@@ -347,14 +313,17 @@ class CTViewer(QMainWindow):
         self.img_coronal.set_data(
             self.apply_window(self.ct_volume[:, y, :], self.window_center, self.window_width))
 
+        # RT Dosis update
         if self.dose_volume is not None:
             self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
             self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
             self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
-            #self.dose_colorbar.update_normal(self.dose_axial)
+
+            # Colorbar update
             for cb, dose_img in zip(self.dose_colorbars, [self.dose_axial, self.dose_sagittal, self.dose_coronal]):
                 cb.update_normal(dose_img)
 
+            #Isolinien update
             for iso_attr, ax, view, idx in [
                 ("iso_axial",    self.ax_axial,    "Axial",    z),
                 ("iso_sagittal", self.ax_sagittal, "Sagittal", x),
@@ -365,26 +334,13 @@ class CTViewer(QMainWindow):
                     iso.remove()
                 setattr(self, iso_attr, self._draw_iso(ax, view, idx))
 
-            self._update_dose_stats("Axial", z)
-
         for panel in [self.panel_axial, self.panel_sagittal, self.panel_coronal]:
             panel.canvas.draw_idle()
 
-    # ------------------------------------------------------------------ status
-
-    def _update_dose_stats(self, view: str, idx: int):
-        if self.resampled_dose_volume is None:
-            return
-        dose_slice, _ = self._get_dose_slice(view, idx)
-        valid = dose_slice[dose_slice > 0]
-        if valid.size == 0:
-            stats = f"{view} — keine Dosiswerte in dieser Schicht"
-        else:
-            stats = (f"{view}  |  Min: {valid.min():.2f} Gy  "
-                     f"Max: {valid.max():.2f} Gy  Mean: {valid.mean():.2f} Gy")
-        self.status_label.setText(stats)
-
     def _on_hover(self, event):
+        """
+        Update der Dosiswert-Anzeige in Gy am unteren Fensterrand
+        """
         mapping = [
             (self.panel_axial.ax,    "Axial",    self.z_idx),
             (self.panel_sagittal.ax, "Sagittal", self.x_idx),
@@ -407,6 +363,9 @@ class CTViewer(QMainWindow):
     # ------------------------------------------------------------------ public
 
     def show_image_data(self):
+        """
+        Anzeige der Metadaten von CT und RT-DOSE
+        """
         if self.ct_img is None:
             return
         print("CT")
@@ -418,9 +377,3 @@ class CTViewer(QMainWindow):
             print("Size:", self.dose_img.GetSize())
             print("Spacing:", self.dose_img.GetSpacing())
             print("Origin:", self.dose_img.GetOrigin())
-
-    def change_cmap(self, new_cmap="grey"):
-        self.CMAP = new_cmap
-
-    def change_interpolation(self, new_interpolation="nearest"):
-        self.INTERPOLATION = new_interpolation
