@@ -25,6 +25,20 @@ class DicomHandler:
             print(f"Active CT-Path: {self.dcm_ct_data_dir}")
 
         self._dicom_list = self._get_dcm_files()
+        # Prüfen, ob die Slices in z-Richtung korrekt sortiert sind
+        first_z = float(self._dicom_list[0].ImagePositionPatient[2])
+        last_z = float(self._dicom_list[-1].ImagePositionPatient[2])
+        print(f"Before sorting: first z = {first_z}, last z = {last_z}")
+
+        if first_z > last_z:
+            print("CT slices are stored in descending order -> reversing.")
+            self._dicom_list.reverse()
+        else:
+            print("CT slices are already in ascending order.")
+
+        first_z = float(self._dicom_list[0].ImagePositionPatient[2])
+        last_z = float(self._dicom_list[-1].ImagePositionPatient[2])
+        print(f"After sorting: first z = {first_z}, last z = {last_z}")
 
         self.dose_path = self._pat.get_rt_dose_path()
         if self.dose_path:
@@ -164,7 +178,15 @@ class DicomHandler:
         dose_img = sitk.GetImageFromArray(dose)
 
         px, py = map(float, self.rt_dose.PixelSpacing)
-        pz = 4.0
+        #pz = 4.0
+        # offsets = np.array(self.rt_dose.GridFrameOffsetVector, dtype=np.float32)
+        # pz = np.mean(np.diff(offsets))
+        offsets = [float(v) for v in self.rt_dose.GridFrameOffsetVector]
+
+        if len(offsets) > 1:
+            pz = offsets[1] - offsets[0]
+        else:
+            pz = 1.0
         spacing = (px, py, pz)
 
         dose_img.SetOrigin(tuple(map(float, self.rt_dose.ImagePositionPatient)))
