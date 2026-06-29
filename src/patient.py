@@ -1,27 +1,31 @@
 import re
-import pydicom
-#TODO Cleanup
-class Patient:
-    def __init__(self, patient_id):
+from typing import Any
 
+
+class Patient:
+    """
+    Klasse, die die Daten eines Patientens kapselt
+    """
+
+    def __init__(self, patient_id):
+        # Liste der Daten:
         self.ct_series = []
         self.mr_series = []
-
         self.rt_structs = []
         self.rt_doses = []
         self.rt_plans = []
         self.segmentations = []
 
-        self.mapped_sets = []
-
         self.active_set = None
 
+        # Indexvariablen der einzelnen Elemente
         self.active_ct_index = 0
         self.active_mr_index = 0
         self.active_dose_index = 0
         self.active_struct_index = 0
         self.active_plan_index = 0
 
+        # Metadaten:
         self._patient_name: str = patient_id
         self._sop_instance_iud: str | None = None
         self._patient_age: int | None = None
@@ -30,23 +34,24 @@ class Patient:
         self._slice_thickness: str | None = None
         self._patient_position: str | None = None
         self._modality: str | None = None
-
         self._frame_reference_uid: str | None = None
-
         self._image_position_patient: str | None = None
 
+        # Zustandsvariablen:
         self._has_ct_studies: bool = False
         self._has_mr_studies: bool = False
         self._has_rt_struct: bool = False
         self._has_rt_dose: bool = False
         self._has_seg: bool = False
 
+        # Dateipfade:
         self._seg_path: str | None = None
         self._rt_dose_path: str | None = None
         self._rt_struct_path: str | None = None
         self._mr_path: str | None = None
         self._ct_path: str | None = None
 
+    # SETTER------------------------------------------------------------------
     ## SETTER for Series -----------------------------------------------------
 
     def add_ct(self, ct):
@@ -75,7 +80,7 @@ class Patient:
     def set_active_mr_index(self, idx: int) -> None:
         self.active_mr_index = idx
 
-    # SETTER for Patient data----------------------------------------------------
+    # SETTER for Metadata ----------------------------------------------------
 
     def set_sop_instance_iud(self, in_iud):
         self._sop_instance_iud = in_iud
@@ -131,8 +136,7 @@ class Patient:
     def set_seg_path(self, in_path) -> None:
         self._seg_path = in_path
 
-
-   ### SETTER for Bool -----------------------------------------------------
+    ### SETTER for Zustandsvariablen -----------------------------------------------------
 
     def set_ct_data_available(self) -> None:
         self._has_ct_studies = True
@@ -149,47 +153,33 @@ class Patient:
     def set_seg_data_available(self) -> None:
         self._has_seg = True
 
+    # GETTER--------------------------------------------------------------------------
+    ### GETTER of Series -------------------------------------------------------------
 
-    # GETTER----------------------------------------------------
-
-    def get_active_ct(self):
+    def get_active_ct(self) -> list[Any] | None:
         if not self.ct_series:
             return None
         return self.ct_series[self.active_ct_index]
 
-    def get_active_ct_path(self):
-        ct = self.get_active_ct()
-        return ct["path"] if ct else None
-
-    def get_active_dose_path(self):
-        if self.active_set:
-            return self.active_set["dose"]["path"]
-        return None
-
-    ### GETTER of Series -------------------------------------------------------------
-
-    def get_ct_series(self) :
+    def get_ct_series(self) -> list[Any]:
         return self.ct_series
 
-    def get_mr_series(self):
+    def get_mr_series(self) -> list[Any]:
         return self.mr_series
 
-    def get_rt_struct_series(self) :
+    def get_rt_struct_series(self) -> list[Any]:
         return self.rt_structs
 
-    def get_rt_dose_series(self):
+    def get_rt_dose_series(self) -> list[Any]:
         return self.rt_doses
 
-    def get_rt_plan_series(self):
+    def get_rt_plan_series(self) -> list[Any]:
         return self.rt_plans
 
-    def get_segmentation_series(self):
+    def get_segmentation_series(self) -> list[Any]:
         return self.segmentations
 
-    def get_mapped_sets(self):
-        return self.mapped_sets
-
-    ### GETTER for Patient variables -----------------------------------------------
+    ### GETTER for Metadaten -----------------------------------------------
 
     def get_patient_name(self) -> str | None:
         return self._patient_name
@@ -209,13 +199,13 @@ class Patient:
     def get_patient_position(self) -> str | None:
         return self._patient_position
 
-    def get_frame_of_reference_uid(self):
+    def get_frame_of_reference_uid(self) -> str | None:
         return self._frame_reference_uid
 
     def get_modality(self) -> str | None:
-            return self._modality
+        return self._modality
 
-    ### GETTER for Bool Variables ------------------------------------------------
+    ### GETTER for Zustandsvariablen ------------------------------------------------
 
     def has_ct_data_available(self) -> bool:
         return self._has_ct_studies
@@ -234,6 +224,15 @@ class Patient:
 
     ### GETTER for Dataset Paths -------------------------------------------------
 
+    def get_active_ct_path(self) -> Any | None:
+        ct = self.get_active_ct()
+        return ct["path"] if ct else None
+
+    def get_active_dose_path(self) -> Any | None:
+        if self.active_set:
+            return self.active_set["dose"]["path"]
+        return None
+
     def get_ct_path(self) -> str | None:
         return self._ct_path
 
@@ -249,5 +248,5 @@ class Patient:
     def get_seg_path(self) -> str | None:
         return self._seg_path
 
-    def get_image_position_patient(self):
+    def get_image_position_patient(self) -> str | None:
         return self._image_position_patient

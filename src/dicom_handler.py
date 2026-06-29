@@ -1,12 +1,19 @@
 import os
 import numpy as np
+from typing import Any
 import pydicom
 from pydicom import FileDataset
 import SimpleITK as sitk
+from SimpleITK import Image
 
 from src.patient import Patient
 
+
 class DicomHandler:
+    """
+    Läd die Daten aus den dicom Files und verarbeitet diese
+    """
+
     def __init__(self, pat: Patient):
         self._pat = pat
 
@@ -29,9 +36,14 @@ class DicomHandler:
         self.get_metadata_to_patient()
 
     def _get_dcm_files(self) -> list[FileDataset]:
+        """
+        sucht alle Files vom Typ .dcm und gibt die einzelnen FileDatasets in einer Liste zurück
+        :return: Liste mit den Dicom Datasets
+        """
         files = []
 
         for root, _, filenames in os.walk(self.dcm_ct_data_dir):
+
             for f in filenames:
                 if not f.lower().endswith(".dcm"):
                     continue
@@ -41,15 +53,19 @@ class DicomHandler:
                 try:
                     ds = pydicom.dcmread(full_path)
                     files.append(ds)
-                except Exception:
+                except Exception as e:
+                    print("Exception in dicom_handler._get_dcm_files(): ", e)
                     continue
 
         return files
 
     def _sort_dicom_list(self) -> None:
+        """
+        Sortiert die Liste nach ImagePositionPatient
+        """
         self._dicom_list.sort(key=lambda ds: float(ds.ImagePositionPatient[2]))
 
-    def create_ct_volume(self) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+    def create_ct_volume(self) -> np.ndarray[tuple[int, ...], np.dtype[Any]]:
         """
         sorting CT slices and getting volume of data
         """
@@ -58,7 +74,7 @@ class DicomHandler:
 
         return volume
 
-    def create_ct_volume_with_HU(self) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+    def create_ct_volume_with_HU(self) -> np.ndarray:
         """
         sorting CT slices and getting volume of data
         """
@@ -71,9 +87,7 @@ class DicomHandler:
 
         return images
 
-    def _convert_to_HU(
-        self, item: FileDataset, image: np.ndarray
-    ) -> np.ndarray[tuple[int, ...], np.dtype[...]]:
+    def _convert_to_HU(self, item: FileDataset, image: np.ndarray) -> np.ndarray:
         """
         Convert the pixel values to Hounsfield Units (HU)
         https://github.com/shujuecn/Radiverse/blob/main/src/radiverse/windowing.py#L23
@@ -88,27 +102,28 @@ class DicomHandler:
         return image
 
     def get_voxelspacing(self) -> tuple[float, float, float]:
+        """
+        Kalkuiert das Voxelspacing
+        :return: Die x, y, z Werte in einem Tuple
+        """
         self._sort_dicom_list()
         dy, dx = map(float, self._dicom_list[0].PixelSpacing)
         dz = float(self._dicom_list[0].SliceThickness)
 
         return dx, dy, dz
 
-    def get_modality(self, data: FileDataset) -> str:
-        """
-        classify modality
-        Modalities can be "CT", "RTSTRUCT", "RTDOSE"
-
-        :param data: FileDataset
-        :return: Modality str of data
-        """
-        return data.Modality
-
     ## RT Dose Volume Handling ------------------------------------
 
-    def resample_dose_volume(self, dose_img, ct_img):
-        dose_resampled = sitk.Resample(dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0,
-                                       sitk.sitkFloat32)
+    def resample_dose_volume(self, dose_img: Image, ct_img: Image) -> np.ndarray:
+        """
+        Passt die Größe der Dosis auf die Größe des CT Bildes an
+        :param dose_img:
+        :param ct_img:
+        :return: das Bild als np.array
+        """
+        dose_resampled = sitk.Resample(
+            dose_img, ct_img, sitk.Transform(), sitk.sitkLinear, 0.0, sitk.sitkFloat32
+        )
         print()
         print("DOSE resampled")
         print("Size:", dose_resampled.GetSize())
@@ -117,14 +132,17 @@ class DicomHandler:
         print("Direction:", dose_resampled.GetDirection())
         print("TransformIndexToPhysikalPoint:")
         print(dose_resampled.TransformIndexToPhysicalPoint((0, 0, 0)))
-        print(dose_resampled.TransformIndexToPhysicalPoint(
-            tuple(s - 1 for s in dose_img.GetSize())
-        ))
+        print(
+            dose_resampled.TransformIndexToPhysicalPoint(
+                tuple(s - 1 for s in dose_img.GetSize())
+            )
+        )
         print()
 
         return sitk.GetArrayFromImage(dose_resampled)
 
-    def get_rt_dose_volume(self):
+    def get_rt_dose_volume(self) -> np.ndarray | None:
+        """gibt das Volumen der RT Dosis zurück"""
         if self.rt_dose is None:
             return None
 
@@ -133,10 +151,12 @@ class DicomHandler:
 
         return dose * scaling
 
-    def get_sitk_dose_image(self):
+    def get_sitk_dose_image(self) -> Image:
+        """gibt das RT Dosis Image zurück"""
         return self.rt_dose_image
 
-    def get_dose_image(self):
+    def get_dose_image(self) -> Image | None:
+        """gibt die RT Dosis zurück"""
         if self.rt_dose is None:
             return None
 
@@ -149,27 +169,14 @@ class DicomHandler:
 
         dose_img.SetOrigin(tuple(map(float, self.rt_dose.ImagePositionPatient)))
         dose_img.SetSpacing(spacing)
-        dose_img.SetDirection((1,0,0,0,1,0,0,0,1)) # -> direction aus CT Refernz übernehmen!
+        dose_img.SetDirection(
+            (1, 0, 0, 0, 1, 0, 0, 0, 1)
+        )  # → direction aus CT Refernz übernehmen!
 
-        #print("FrameOfReferenceUID from rt_dose:", self.rt_dose.FrameOfReferenceUID)
-        #print("ImagePositionPatient from rt_dose:", self.rt_dose.ImagePositionPatient)
-        #print("GridOffSetVector:", self.rt_dose.GridFrameOffsetVector[:5])
-        #print(self.rt_dose.GridFrameOffsetVector[-5:])
         return dose_img
 
-    def get_metadata(self) -> dict[str, str]:
-        image = self._dicom_list[0]
-
-        return {
-            "PatientName": image.PatientName,
-            "PatientAge": image.PatientAge,
-            "PatientSex": image.PatientSex,
-            "BodyPartExamined": image.BodyPartExamined,
-            "SliceThickness": image.SliceThickness,
-            "PatientPosition": image.PatientPosition,
-        }
-
     def get_metadata_to_patient(self):
+        """Übergibt die Metadaten in das Patient-Objekt"""
         image = self._dicom_list[0]
 
         if image.__contains__("PatientAge"):
@@ -189,16 +196,20 @@ class DicomHandler:
         if image.__contains__("FrameOfReferenceUID"):
             self._pat.set_frame_of_reference_uid(image.FrameOfReferenceUID)
 
-    def get_ct_image(self, ct_volume ,dx, dy, dz):
+    def get_ct_image(
+        self, ct_volume: np.ndarray, dx: float | int, dy: float | int, dz: float | int
+    ) -> Image:
+        """
+        Läd das CT Bild mit Volumen, x, y, und z Koordinaten,
+        setzt Ursprung, Spacing und Richtung und gibt
+        das Image zurück
+        """
         img = sitk.GetImageFromArray(ct_volume.astype(np.float32))
         origin = self._pat.get_image_position_patient()
         spacing = (dx, dy, dz)
 
-        #print("FrameOfReferenceUID  ct origin:", self._pat.get_frame_of_reference_uid())
-        #print(f"ImagePositionPatient ct origin: {origin}")
-
         if origin is None:
-                origin = (0, 0, 0)
+            origin = (0, 0, 0)
 
         img.SetSpacing(spacing)
         img.SetOrigin(origin)

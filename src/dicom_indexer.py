@@ -1,10 +1,15 @@
 import os
+import json
+from typing import Any
+
 import pydicom
 from collections import defaultdict
-import json
 
 
 class DicomIndexer:
+    """
+    Klasse zum Erzeugen der dicom_index.json
+    """
 
     def __init__(self, root):
         self._patient_list: list[str] = []
@@ -18,7 +23,7 @@ class DicomIndexer:
                     "dose": [],
                     "rtstruct": [],
                     "rtplan": [],
-                    "seg": []
+                    "seg": [],
                 }
             )
         )
@@ -27,21 +32,26 @@ class DicomIndexer:
         self.has_rt_structure = False
         self._json_file_name = "dicom_index.json"
 
-        if not self.is_json_complete():
+        if not self._is_json_complete():
             self.build()
             self.save()
         else:
             pass
 
-    def build(self):
+    def build(self) -> defaultdict[Any, defaultdict[Any, dict[str, list[Any]]]]:
+        """
+        Geht durch die Projektfiles, und schreibt Modalities, Dateipfade, uid und Beschreibung in einen dict
+        :return:
+        """
         for path, _, files in os.walk(self.root):
 
             for f in files:
-                full_path = os.path.join(path, f)
+                full_path = os.path.join(str(path), str(f))
 
                 try:
                     ds = pydicom.dcmread(full_path, stop_before_pixels=True)
-                except:
+                except Exception as e:
+                    print("Exception in dicom_indexer.build(): ", e)
                     continue
 
                 patient = ds.get("PatientID", "UNKNOWN")
@@ -55,48 +65,55 @@ class DicomIndexer:
 
                 if modality == "CT":
                     if path not in [x["path"] for x in entry["ct"]]:
-                        entry["ct"].append({
-                            "path": path,
-                            "series_uid": ds.get("SeriesInstanceUID"),
-                            "description": ds.get("SeriesDescription", "")
-                        })
+                        entry["ct"].append(
+                            {
+                                "path": path,
+                                "series_uid": ds.get("SeriesInstanceUID"),
+                                "description": ds.get("SeriesDescription", ""),
+                            }
+                        )
 
                 elif modality == "MR":
                     if path not in [x["path"] for x in entry["mr"]]:
-                        entry["mr"].append({
-                            "path": path,
-                            "series_uid": ds.get("SeriesInstanceUID"),
-                            "description": ds.get("SeriesDescription", "")
-                        })
+                        entry["mr"].append(
+                            {
+                                "path": path,
+                                "series_uid": ds.get("SeriesInstanceUID"),
+                                "description": ds.get("SeriesDescription", ""),
+                            }
+                        )
 
                 elif modality == "RTDOSE":
-                    entry["dose"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID")
-                    })
+                    entry["dose"].append(
+                        {"path": full_path, "sop_uid": ds.get("SOPInstanceUID")}
+                    )
 
                 elif modality == "RTSTRUCT":
-                    entry["rtstruct"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID"),
-                        "description": ds.get("StructureSetLabel", "")
-                    })
+                    entry["rtstruct"].append(
+                        {
+                            "path": full_path,
+                            "sop_uid": ds.get("SOPInstanceUID"),
+                            "description": ds.get("StructureSetLabel", ""),
+                        }
+                    )
 
                 elif modality == "RTPLAN":
-                    entry["rtplan"].append({
-                        "path": full_path,
-                        "sop_uid": ds.get("SOPInstanceUID")
-                    })
+                    entry["rtplan"].append(
+                        {"path": full_path, "sop_uid": ds.get("SOPInstanceUID")}
+                    )
 
                 elif modality == "SEG":
-                    entry["seg"].append({
-                        "path": full_path,
-                        "description": ds.get("SeriesDescription", "")
-                    })
+                    entry["seg"].append(
+                        {
+                            "path": full_path,
+                            "description": ds.get("SeriesDescription", ""),
+                        }
+                    )
 
         return self.index
 
     def save(self):
+        """speichert die Daten aus dem dict in einer json"""
         with open(self._json_file_name, "w") as f:
             json.dump(self.index, f, indent=2)
 
@@ -107,24 +124,13 @@ class DicomIndexer:
         return self._json_file_name
 
     def get_patient_list(self) -> list[str]:
+        """gibt die komplette Liste der verfügbaren Patienten zurück"""
         return self._patient_list
 
-    @staticmethod
-    def inspect_dataset(root):
-        for path, _, files in os.walk(root):
-
-            for f in files:
-                try:
-                    ds = pydicom.dcmread(os.path.join(path, f), stop_before_pixels=True)
-
-                    print(f"{ds.Modality:10}", ds.get("SeriesDescription", "---"), path)
-
-                    break
-
-                except Exception:
-                    pass
-
-    def is_json_complete(self) -> bool:
+    def _is_json_complete(self) -> bool:
+        """geht durch die json und prüft, ob die Anzahl der Patienten noch
+        mit der Menge der Daten in der json übereinstimmt, also ob neue Daten dazugekommen sind oder
+        gelöscht wurden"""
         data_dir = "./data/RT"
         dir_list = os.listdir(data_dir)
 
@@ -137,11 +143,12 @@ class DicomIndexer:
                 return len(data) == len(dir_list)
 
         except FileNotFoundError:
-            print("JSON File not found!!!")
+            print("No JSON File - new will be generated")
             return False
 
     @staticmethod
     def select_patient(patient_list: list[str]) -> str:
+        """Terminal UI um einen Patienten aus den Daten auszuwählen"""
         print("\nVerfügbare Patienten:\n")
 
         for i, patient in enumerate(patient_list, start=1):
