@@ -188,9 +188,9 @@ class DicomHandler:
 
         dose_img.SetOrigin(tuple(map(float, self.rt_dose.ImagePositionPatient)))
         dose_img.SetSpacing(spacing)
-        dose_img.SetDirection(
-            (1, 0, 0, 0, 1, 0, 0, 0, 1)
-        )  # → direction aus CT Refernz übernehmen!
+        # dose_img.SetDirection(
+        #     (1, 0, 0, 0, 1, 0, 0, 0, 1)
+        # )  # → direction aus CT Refernz übernehmen!
 
         return dose_img
 

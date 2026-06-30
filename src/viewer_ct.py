@@ -90,7 +90,7 @@ class CTViewer(QMainWindow):
         ov_ax.set_facecolor("#111111")
         ov_fig.subplots_adjust(left=0, right=1, top=0.92, bottom=0)
         ov_canvas = FigureCanvasQTAgg(ov_fig)
-        #ov_canvas.setStyleSheet("border: none;")
+        ov_canvas.setStyleSheet("border: none;")
         ov_layout = QVBoxLayout(self.panel_overview)
         ov_layout.setContentsMargins(0, 0, 0, 0)
         ov_layout.addWidget(ov_canvas)
@@ -216,8 +216,11 @@ class CTViewer(QMainWindow):
         dose_slice, aspect = self._get_dose_slice(view, idx)
         global_max = np.max(self.resampled_dose_volume)
         threshold = 0.05 * global_max
+        # Werte unterhalb des Thresholds maskieren statt nur clippen
+        masked = np.where(dose_slice > threshold, dose_slice, np.nan)
+
         img_dose = ax.imshow(
-            dose_slice,
+            masked,
             cmap="jet", alpha=0.6,
             vmin=threshold,
             vmax=global_max,
@@ -315,9 +318,18 @@ class CTViewer(QMainWindow):
 
         # RT Dosis update
         if self.dose_volume is not None:
-            self.dose_axial.set_data(self.resampled_dose_volume[z, :, :])
-            self.dose_sagittal.set_data(self.resampled_dose_volume[:, :, x])
-            self.dose_coronal.set_data(self.resampled_dose_volume[:, y, :])
+            global_max = np.max(self.resampled_dose_volume)
+            threshold = 0.05 * global_max
+
+            self.dose_axial.set_data(
+                np.where(self.resampled_dose_volume[z, :, :] > threshold,
+                         self.resampled_dose_volume[z, :, :], np.nan))
+            self.dose_sagittal.set_data(
+                np.where(self.resampled_dose_volume[:, :, x] > threshold,
+                         self.resampled_dose_volume[:, :, x], np.nan))
+            self.dose_coronal.set_data(
+                np.where(self.resampled_dose_volume[:, y, :] > threshold,
+                         self.resampled_dose_volume[:, y, :], np.nan))
 
             # Colorbar update
             for cb, dose_img in zip(self.dose_colorbars, [self.dose_axial, self.dose_sagittal, self.dose_coronal]):
